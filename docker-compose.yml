@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  # 1. MongoDB Database container
+  mongodb:
+    image: mongo:latest
+    container_name: atsify-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - atsify-network
+
+  # 2. AI NLP Microservice container (Python FastAPI)
+  ai_service:
+    build: ./ai_service
+    container_name: atsify-ai-service
+    ports:
+      - "8000:8000"
+    networks:
+      - atsify-network
+
+  # 3. Express API Backend container
+  backend:
+    build: ./backend
+    container_name: atsify-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - MONGODB_URI=mongodb://mongodb:27017/ai_resume_analyser
+      - AI_SERVICE_URL=http://ai_service:8000
+    volumes:
+      - uploads-data:/usr/src/app/uploads
+    depends_on:
+      - mongodb
+      - ai_service
+    networks:
+      - atsify-network
+
+  # 4. React Frontend container (Nginx Server)
+  frontend:
+    build: ./frontend
+    container_name: atsify-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - atsify-network
+
+volumes:
+  mongo-data:
+  uploads-data:
+
+networks:
+  atsify-network:
+    driver: bridge

@@ -1,0 +1,32 @@
+# Avoid copying git files
+.git
+.gitignore
+
+# Documentation
+README.md
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Ignore Node dependencies and builds
+**/node_modules
+**/dist
+**/build
+
+# Ignore Python environments and caches
+**/venv
+**/.venv
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+
+# Ignore local environment files and logs
+**/.env
+**/.env.local
+**/*.log
+
+# Ignore local uploads data
+**/uploads
+**/mongodb-data

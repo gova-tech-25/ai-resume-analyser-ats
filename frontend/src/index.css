@@ -1,0 +1,133 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', sans-serif;
+  }
+}
+
+/* Custom Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Glassmorphism utility styles */
+.glass-panel {
+  @apply backdrop-blur-md bg-white/70 border border-slate-200/50 shadow-glass-light dark:bg-slate-900/70 dark:border-slate-800/50 dark:shadow-glass-dark;
+}
+
+.glass-navbar {
+  @apply sticky top-0 z-50 backdrop-blur-md bg-slate-50/80 border-b border-slate-200/50 dark:bg-slate-950/80 dark:border-slate-800/50;
+}
+
+/* Glowing dot / animated backgrounds */
+.glow-effect {
+  position: relative;
+}
+.glow-effect::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.glow-effect:hover::after {
+  opacity: 1;
+}
+
+/* 3D Transform Utilities */
+.perspective-1000 {
+  perspective: 1000px;
+}
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+/* 3D Depth Card Shadows */
+.shadow-3d-card {
+  box-shadow: 
+    0 1px 1px rgba(0,0,0,0.06), 
+    0 2px 2px rgba(0,0,0,0.06), 
+    0 4px 4px rgba(0,0,0,0.06), 
+    0 8px 8px rgba(0,0,0,0.06),
+    0 16px 16px rgba(0,0,0,0.06);
+  transition: box-shadow 0.3s ease, transform 0.1s ease;
+}
+.dark .shadow-3d-card {
+  box-shadow: 
+    0 1px 1px rgba(0,0,0,0.25), 
+    0 2px 2px rgba(0,0,0,0.25), 
+    0 4px 4px rgba(0,0,0,0.25), 
+    0 8px 8px rgba(0,0,0,0.25),
+    0 16px 16px rgba(0,0,0,0.25);
+}
+
+.shadow-3d-card:hover {
+  box-shadow: 
+    0 2px 4px rgba(99, 102, 241, 0.1), 
+    0 4px 8px rgba(99, 102, 241, 0.1), 
+    0 8px 16px rgba(99, 102, 241, 0.1), 
+    0 16px 32px rgba(99, 102, 241, 0.1),
+    0 32px 64px rgba(99, 102, 241, 0.1);
+}
+
+/* Floating 3D Shapes */
+@keyframes float3d {
+  0% {
+    transform: translateY(0px) rotate(0deg) translateZ(0px);
+  }
+  50% {
+    transform: translateY(-20px) rotate(180deg) translateZ(40px);
+  }
+  100% {
+    transform: translateY(0px) rotate(360deg) translateZ(0px);
+  }
+}
+
+.animate-float-3d {
+  animation: float3d 15s infinite linear;
+  transform-style: preserve-3d;
+}
+
+.animate-float-3d-delayed {
+  animation: float3d 20s infinite linear;
+  animation-delay: -7s;
+  transform-style: preserve-3d;
+}
+
+/* 3D Mode Card Layering */
+.translate-z-10 {
+  transform: translateZ(10px);
+}
+.translate-z-20 {
+  transform: translateZ(20px);
+}
+.translate-z-30 {
+  transform: translateZ(30px);
+}
+
