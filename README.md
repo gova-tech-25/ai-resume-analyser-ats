@@ -107,7 +107,7 @@ All protected backend API endpoints expect the following headers:
 ## 🔌 5. API Documentation & Integration
 
 For a complete breakdown of request/response payloads, endpoints, Pydantic schemas for the FastAPI service, and status codes, refer to the detailed API guide:
-👉 **[API Documentation](file:///C:/Users/govar/.gemini/antigravity/brain/c677182a-43c8-40f1-a85e-d15ee8970e71/api_documentation.md)**
+👉 **[API Documentation](./api_documentation.md)**
 
 ---
 
