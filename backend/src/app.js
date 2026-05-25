@@ -36,6 +36,21 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Serve static assets in production (React build)
+if (process.env.NODE_ENV === 'production') {
+  const distPath = path.join(__dirname, '../../frontend/dist');
+  app.use(express.static(distPath));
+  
+  // Hand off any non-API get requests to index.html for client-side routing
+  app.get('*', (req, res, next) => {
+    // Only intercept requests that aren't API calls
+    if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
+      return next();
+    }
+    res.sendFile(path.resolve(distPath, 'index.html'));
+  });
+}
+
 // Global Error Handler
 app.use((err, req, res, next) => {
   console.error('Unhandled Error:', err);

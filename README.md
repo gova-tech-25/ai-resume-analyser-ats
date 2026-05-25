@@ -206,4 +206,12 @@ To run the entire system (Frontend, Backend, FastAPI NLP Service, and MongoDB) c
 4. Open your browser and navigate to:
    👉 **[http://localhost:3000](http://localhost:3000)**
 
+---
+
+## 🌐 7. Cloud Deployment (Render)
+
+For a step-by-step walkthrough on how to host this application in the cloud (using Render for compute services and MongoDB Atlas for database hosting), refer to the deployment guide:
+👉 **[Render Deployment Guide](./render_deployment_guide.md)**
+
+
 
