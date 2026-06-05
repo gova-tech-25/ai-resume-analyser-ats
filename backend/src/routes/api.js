@@ -13,7 +13,7 @@ const adminController = require('../controllers/adminController');
 const notificationController = require('../controllers/notificationController');
 
 // Middleware
-const { mockAuth, checkRole } = require('../middleware/roleCheck');
+const { auth, authorize } = require('../middleware/auth');
 
 // Configure Multer storage
 const uploadsDir = path.join(__dirname, '../../uploads');
@@ -49,49 +49,52 @@ const upload = multer({
 });
 
 /* =========================================================================
-   MOCK AUTH ROUTES (Profile resolution & switching)
+   AUTH ROUTES (JWT-based and Profile Selection fallback)
    ========================================================================= */
+router.post('/auth/register', authController.register);
+router.post('/auth/login', authController.login);
+router.post('/auth/logout', auth, authController.logout);
 router.get('/auth/profiles', authController.getProfiles);
-router.get('/auth/me', authController.getMe);
+router.get('/auth/me', auth, authController.getMe);
 
 /* =========================================================================
    STUDENT ROUTES
    ========================================================================= */
 router.post(
   '/resumes/upload',
-  mockAuth,
-  checkRole(['student', 'admin']),
+  auth,
+  authorize(['student', 'admin']),
   upload.single('resume'),
   resumeController.uploadResume
 );
 router.get(
   '/resumes/history',
-  mockAuth,
-  checkRole(['student', 'admin']),
+  auth,
+  authorize(['student', 'admin']),
   resumeController.getHistory
 );
 router.delete(
   '/resumes/history',
-  mockAuth,
-  checkRole(['student', 'admin']),
+  auth,
+  authorize(['student', 'admin']),
   resumeController.clearHistory
 );
 router.post(
   '/resumes/analyze',
-  mockAuth,
-  checkRole(['student', 'admin']),
+  auth,
+  authorize(['student', 'admin']),
   resumeController.analyzeAgainstJob
 );
 router.get(
   '/applications/student',
-  mockAuth,
-  checkRole(['student', 'admin']),
+  auth,
+  authorize(['student', 'admin']),
   applicationController.getStudentApplications
 );
 router.post(
   '/applications/apply',
-  mockAuth,
-  checkRole(['student', 'admin']),
+  auth,
+  authorize(['student', 'admin']),
   applicationController.applyToJob
 );
 
@@ -100,8 +103,8 @@ router.post(
    ========================================================================= */
 router.post(
   '/jobs',
-  mockAuth,
-  checkRole(['recruiter', 'admin']),
+  auth,
+  authorize(['recruiter', 'admin']),
   jobController.postJob
 );
 router.get(
@@ -110,20 +113,20 @@ router.get(
 );
 router.get(
   '/jobs/:id/applicants',
-  mockAuth,
-  checkRole(['recruiter', 'admin']),
+  auth,
+  authorize(['recruiter', 'admin']),
   jobController.getApplicants
 );
 router.get(
   '/applications/recruiter',
-  mockAuth,
-  checkRole(['recruiter', 'admin']),
+  auth,
+  authorize(['recruiter', 'admin']),
   applicationController.getRecruiterApplications
 );
 router.post(
   '/applications/:id/status',
-  mockAuth,
-  checkRole(['recruiter', 'admin']),
+  auth,
+  authorize(['recruiter', 'admin']),
   applicationController.updateApplicationStatus
 );
 
@@ -132,32 +135,32 @@ router.post(
    ========================================================================= */
 router.get(
   '/admin/users',
-  mockAuth,
-  checkRole(['admin']),
+  auth,
+  authorize(['admin']),
   adminController.getUsers
 );
 router.post(
   '/admin/users',
-  mockAuth,
-  checkRole(['admin']),
+  auth,
+  authorize(['admin']),
   adminController.createUser
 );
 router.put(
   '/admin/users/:id',
-  mockAuth,
-  checkRole(['admin']),
+  auth,
+  authorize(['admin']),
   adminController.updateUser
 );
 router.delete(
   '/admin/users/:id',
-  mockAuth,
-  checkRole(['admin']),
+  auth,
+  authorize(['admin']),
   adminController.deleteUser
 );
 router.get(
   '/admin/analytics',
-  mockAuth,
-  checkRole(['admin']),
+  auth,
+  authorize(['admin']),
   adminController.getAnalytics
 );
 
@@ -166,12 +169,12 @@ router.get(
    ========================================================================= */
 router.get(
   '/notifications',
-  mockAuth,
+  auth,
   notificationController.getNotifications
 );
 router.put(
   '/notifications/:id/read',
-  mockAuth,
+  auth,
   notificationController.markAsRead
 );
 

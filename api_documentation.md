@@ -4,18 +4,17 @@ This document provides a detailed description of the API endpoints, request/resp
 
 ---
 
-## 🔑 Authentication Mechanics (Simulated Auth)
+## 🔑 Authentication Mechanics (JWT Bearer Token)
 
-To simplify developer workflow and allow instant role testing without registration friction, the backend uses simulated auth headers. All authenticated routes require the following headers:
+The backend uses a standard JSON Web Token (JWT) bearer authentication system. To access protected endpoints, clients must include the token in the HTTP `Authorization` header:
 
-| Header Name | Required Value | Purpose |
-| :--- | :--- | :--- |
-| `x-user-role` | `student` \| `recruiter` \| `admin` | The active role checking authorization limits. |
-| `x-user-id` | `[MongoDB ObjectId]` | The database identifier of the mock profile. |
+```http
+Authorization: Bearer <JWT_TOKEN>
+```
 
-If headers are missing on protected routes, the API returns:
-- Status `401 Unauthorized` with body `{"error": "Missing simulated auth headers. Please provide x-user-role and x-user-id."}`
-- Status `430 Access Denied` if the role is unauthorized for that route.
+If the token is missing, invalid, or expired, the API will return:
+- Status `401 Unauthorized` with body `{"error": "Authentication required. Please provide a Bearer token or mock auth headers."}`
+- Status `430 Access Denied` if the authenticated user's role lacks permissions for the endpoint.
 
 ---
 
@@ -23,39 +22,104 @@ If headers are missing on protected routes, the API returns:
 
 All backend endpoints are prefixed with `/api`.
 
-### 1. Mock Authentication & Profile Selection
+### 1. Authentication & Profile Selection
 
-#### `GET /api/auth/profiles`
-Retrieve all seed profiles available for user emulation.
+#### `POST /api/auth/register`
+Register a new user account on the platform.
 - **Access**: Public
+- **Request Body**:
+  ```json
+  {
+    "username": "Jane Doe",
+    "email": "jane@example.com",
+    "password": "mySecurePassword123",
+    "role": "student" // "student" | "recruiter" | "admin"
+  }
+  ```
+- **Response `201 Created`**:
+  ```json
+  {
+    "message": "Registration successful! You can now log in.",
+    "user": {
+      "_id": "6a2303ae265f14e219b7b2ca",
+      "username": "Jane Doe",
+      "email": "jane@example.com",
+      "role": "student",
+      "profileImage": "https://api.dicebear.com/7.x/avataaars/svg?seed=Jane%20Doe"
+    }
+  }
+  ```
+
+#### `POST /api/auth/login`
+Authenticate a user and issue a JWT token.
+- **Access**: Public
+- **Request Body**:
+  ```json
+  {
+    "email": "alex.student@example.com",
+    "password": "password123"
+  }
+  ```
 - **Response `200 OK`**:
   ```json
-  [
-    {
-      "_id": "60c72b2f9b1d8b2bad000001",
+  {
+    "message": "Login successful.",
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjZhMjMwM2Fl...",
+    "user": {
+      "_id": "6a2303ae265f14e219b7b2b9",
       "username": "Alex Student",
       "email": "alex.student@example.com",
       "role": "student",
       "profileImage": "https://api.dicebear.com/7.x/avataaars/svg?seed=Alex",
-      "createdAt": "2026-05-22T11:00:00.000Z"
+      "isOnline": true
     }
-  ]
+  }
   ```
 
-#### `GET /api/auth/me`
-Retrieve user profile details for the active headers.
-- **Access**: Public (Attempts parsing headers, falls back to default role profile)
-- **Headers**: Optional `x-user-role` & `x-user-id`
+#### `POST /api/auth/logout`
+Log out the active user and set their online status to offline.
+- **Access**: Protected (JWT token required)
 - **Response `200 OK`**:
   ```json
   {
-    "_id": "60c72b2f9b1d8b2bad000001",
-    "username": "Alex Student",
-    "email": "alex.student@example.com",
-    "role": "student",
-    "profileImage": "https://api.dicebear.com/7.x/avataaars/svg?seed=Alex"
+    "message": "Logout successful."
   }
   ```
+
+#### `GET /api/auth/profiles`
+Retrieve all profile listings (excluding passwords) to support developer emulation.
+- **Access**: Public
+- **Response `200 OK`**: List of user objects containing `username`, `email`, `role`, `profileImage`, and `isOnline`.
+
+#### `GET /api/auth/me`
+Retrieve details of the currently authenticated profile session.
+- **Access**: Protected (JWT token required)
+- **Response `200 OK`**: Profile details of the logged-in user.
+
+---
+
+## 📡 WebSockets Event Triggers (Socket.io - Port 5000)
+
+The application implements real-time visual syncing of user statuses across pages using WebSockets.
+
+### Client-to-Server Messages
+1. **`authenticate`**: Dispatched by the React client immediately upon connection to bind the WebSocket socket ID to the user database ID.
+   - Payload: `{"token": "<JWT_TOKEN>"}`
+2. **`identify`**: Dispatched by the client as a developer fallback in dev mode if using mock profiles.
+   - Payload: `{"userId": "<MONGODB_USER_ID>"}`
+
+### Server-to-Client Broadcasts
+1. **`userStatusChanged`**: Broadcasted to all connected clients when a user logs in, logs out, or disconnects.
+   - Payload:
+     ```json
+     {
+       "userId": "6a2303ae265f14e219b7b2b9",
+       "username": "Alex Student",
+       "role": "student",
+       "isOnline": true, // true or false
+       "lastActiveAt": "2026-06-05T17:10:00.000Z"
+     }
+     ```
 
 ---
 

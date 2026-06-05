@@ -73,19 +73,20 @@ ai-resume-analyser/
 
 ---
 
-## 💡 4. Role-Based Mechanics & Access Control
+## 💡 Authentication & Real-Time Active Sessions
 
-Because this setup operates without a mandatory signup/login authentication screen, testing the entire platform is extremely simple:
-- In the top-right header, you will see a **dropdown role switcher** (e.g., "Student Mode").
-- Toggle the dropdown to select between **Student**, **Recruiter**, or **Admin**.
-- The frontend will dynamically reload the dashboard, updating the active profile avatar and sending custom simulated headers to the Express API. The database links resumes, jobs, and applications to the correct profile automatically.
+ATSify uses a secure, production-grade **JWT (JSON Web Token)** bearer authentication system coupled with **WebSockets (Socket.io)** for real-time tracking of active user sessions.
 
-### Header-Based Security Context
-All protected backend API endpoints expect the following headers:
-- `x-user-role`: The active role/persona (`student`, `recruiter`, `admin`).
-- `x-user-id`: The corresponding MongoDB `User` object `_id`.
+### Key Authentication Flows
+1. **User Accounts**: Registration and Login forms allow users to sign up or authenticate as a **Student**, **Recruiter**, or **Admin**.
+2. **Session Verification**: Secure backend routes verify bearer tokens from `Authorization: Bearer <JWT_TOKEN>` headers.
+3. **Password Security**: Passwords are securely hashed with **bcryptjs** in MongoDB.
+4. **WebSocket Syncing**: Upon successful authentication, the React client initiates a WebSocket connection to the backend. The backend updates the user's online state (`isOnline: true`) in MongoDB and broadcasts user state updates in real-time.
 
-### Workspace Personas & Access Control Matrix:
+### Development Role Switcher Dropdown
+For developer convenience during testing, the top-right header contains a simulated role selector dropdown. Selecting a role from this dropdown executes a real background login with seed credentials (`alex.student@example.com`, `sarah.recruiter@example.com`, `devon.admin@example.com` using password `password123`) to seamlessly switch your active workspace while verifying your token integrity and socket connection in real-time.
+
+### Workspace Access Control Matrix:
 1. **Alex Student** (`student`):
    - **Upload Resumes**: `POST /api/resumes/upload`
    - **Check Scans History**: `GET /api/resumes/history`
@@ -100,7 +101,7 @@ All protected backend API endpoints expect the following headers:
    - **Update Candidacy Status**: `POST /api/applications/:id/status` (Update status and add feedback)
 3. **Devon Admin** (`admin`):
    - **User Management**: `GET /POST /PUT /DELETE` under `/api/admin/users`
-   - **System Analytics Dashboard**: `GET /api/admin/analytics`
+   - **System Analytics Dashboard**: `GET /api/admin/analytics` (Displays live online user counts and active user sessions updating in real-time)
 
 ---
 

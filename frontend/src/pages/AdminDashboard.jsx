@@ -12,7 +12,7 @@ import {
 } from 'recharts';
 
 export default function AdminDashboard() {
-  const { activeUser, getAuthHeaders, refreshProfiles } = useRole();
+  const { activeUser, getAuthHeaders, refreshProfiles, onlineUsers = [] } = useRole();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeSubTab = searchParams.get('tab') || 'stats';
   
@@ -154,7 +154,7 @@ export default function AdminDashboard() {
           {analyticsLoading ? (
             <div className="text-center py-6 text-xs text-slate-400">Loading statistics...</div>
           ) : analytics ? (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
               <div className="glass-panel p-6 rounded-3xl text-center">
                 <span className="text-3xl font-extrabold text-indigo-500">{analytics.counts.totalUsers}</span>
                 <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">Total Users</p>
@@ -174,11 +174,20 @@ export default function AdminDashboard() {
                 <span className="text-3xl font-extrabold text-amber-500">{analytics.counts.avgAtsScore}%</span>
                 <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">Average ATS Score</p>
               </div>
+              <div className="glass-panel p-6 rounded-3xl text-center relative overflow-hidden border border-emerald-500/20">
+                <div className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                <div className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-emerald-500" />
+                <span className="text-3xl font-extrabold text-emerald-500">{onlineUsers.length}</span>
+                <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">Online Now</p>
+                <div className="text-[9px] text-slate-400 mt-1">
+                  Active WebSockets
+                </div>
+              </div>
             </div>
           ) : null}
 
           {/* Activity graphs */}
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-4 gap-6">
             {/* User Registration Growth */}
             <div className="glass-panel p-6 rounded-3xl md:col-span-2 flex flex-col gap-4">
               <div className="flex justify-between items-center">
@@ -243,6 +252,43 @@ export default function AdminDashboard() {
                 The Python microservice handles Heavy Sentence Embeddings, and the Express backend is isolated for API IO and file streams.
               </div>
             </div>
+
+            {/* Live Online Users List Widget */}
+            <div className="glass-panel p-6 rounded-3xl flex flex-col gap-4 justify-between">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <h3 className="text-sm font-bold">Live Online Users</h3>
+                </div>
+                <div className="flex flex-col gap-2.5 mt-2 overflow-y-auto max-h-[160px] pr-1">
+                  {onlineUsers.length === 0 ? (
+                    <div className="text-center py-6 text-xs text-slate-400">No other users online.</div>
+                  ) : (
+                    onlineUsers.map((user, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-2 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 transition-colors">
+                        <div className="flex items-center gap-2">
+                          <img 
+                            src={user.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.username)}`} 
+                            alt={user.username} 
+                            className="w-6 h-6 rounded-full bg-slate-800 shrink-0" 
+                          />
+                          <div className="flex flex-col truncate max-w-[100px]">
+                            <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 truncate">{user.username}</span>
+                            <span className="text-[8px] text-slate-400 uppercase font-semibold">{user.role}</span>
+                          </div>
+                        </div>
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+              <div className="p-3.5 bg-emerald-50/50 rounded-2xl dark:bg-emerald-950/20 text-[10px] text-slate-500 leading-normal flex items-start gap-1.5 mt-4">
+                <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                Live status synchronizes instantly across open browser sessions via WebSockets.
+              </div>
+            </div>
+
           </div>
         </div>
       )}

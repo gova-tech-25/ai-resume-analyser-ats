@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 const UserSchema = new mongoose.Schema({
   username: {
@@ -14,6 +15,10 @@ const UserSchema = new mongoose.Schema({
     trim: true,
     lowercase: true
   },
+  password: {
+    type: String,
+    required: true
+  },
   role: {
     type: String,
     enum: ['student', 'recruiter', 'admin'],
@@ -22,9 +27,34 @@ const UserSchema = new mongoose.Schema({
   profileImage: {
     type: String,
     default: 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'
+  },
+  isOnline: {
+    type: Boolean,
+    default: false
+  },
+  lastActiveAt: {
+    type: Date,
+    default: Date.now
   }
 }, {
   timestamps: true
 });
+
+// Pre-save hook to hash password
+UserSchema.pre('save', async function(next) {
+  if (!this.isModified('password')) return next();
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Method to verify password
+UserSchema.methods.comparePassword = async function(candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.password);
+};
 
 module.exports = mongoose.model('User', UserSchema);

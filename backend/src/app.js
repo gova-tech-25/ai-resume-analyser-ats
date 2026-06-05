@@ -4,13 +4,26 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const path = require('path');
+const http = require('http');
+const { Server } = require('socket.io');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const apiRouter = require('./routes/api');
+const User = require('./models/User');
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*", // Allows connections from development clients
+    methods: ["GET", "POST"]
+  }
+});
+
 const PORT = process.env.PORT || 5000;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/ai_resume_analyser';
+const JWT_SECRET = process.env.JWT_SECRET || 'atsify_jwt_secret_key_2026';
 
 // Middlewares
 app.use(helmet({
@@ -59,12 +72,113 @@ app.use((err, req, res, next) => {
   });
 });
 
+// WebSocket Event Listeners
+io.on('connection', (socket) => {
+  console.log('Client connected to WebSockets:', socket.id);
+
+  // Authenticate connection using JWT token
+  socket.on('authenticate', async (data) => {
+    try {
+      const token = data?.token;
+      if (token) {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const user = await User.findById(decoded.id);
+        
+        if (user) {
+          socket.userId = user._id.toString();
+          user.isOnline = true;
+          user.lastActiveAt = new Date();
+          await user.save();
+
+          console.log(`WebSockets: User ${user.username} (${user.role}) authenticated.`);
+          
+          // Broadcast status change
+          io.emit('userStatusChanged', {
+            userId: user._id,
+            username: user.username,
+            role: user.role,
+            isOnline: true,
+            lastActiveAt: user.lastActiveAt
+          });
+        }
+      }
+    } catch (err) {
+      console.error('WebSockets authentication error:', err.message);
+    }
+  });
+
+  // Simple identification fallback (e.g. for guest / dev modes)
+  socket.on('identify', async (data) => {
+    try {
+      const userId = data?.userId;
+      if (userId) {
+        const user = await User.findById(userId);
+        if (user) {
+          socket.userId = user._id.toString();
+          user.isOnline = true;
+          user.lastActiveAt = new Date();
+          await user.save();
+
+          console.log(`WebSockets: User ${user.username} identified.`);
+          
+          io.emit('userStatusChanged', {
+            userId: user._id,
+            username: user.username,
+            role: user.role,
+            isOnline: true,
+            lastActiveAt: user.lastActiveAt
+          });
+        }
+      }
+    } catch (err) {
+      console.error('WebSockets identification error:', err.message);
+    }
+  });
+
+  socket.on('disconnect', async () => {
+    console.log('Client disconnected from WebSockets:', socket.id);
+    
+    if (socket.userId) {
+      const userId = socket.userId;
+      
+      // Debounce the offline status change to prevent flicker on page reload/refresh
+      setTimeout(async () => {
+        try {
+          const activeSockets = await io.fetchSockets();
+          const isStillConnected = activeSockets.some(s => s.userId === userId);
+          
+          if (!isStillConnected) {
+            const user = await User.findById(userId);
+            if (user) {
+              user.isOnline = false;
+              user.lastActiveAt = new Date();
+              await user.save();
+              
+              console.log(`WebSockets: User ${user.username} logged off.`);
+              
+              io.emit('userStatusChanged', {
+                userId: user._id,
+                username: user.username,
+                role: user.role,
+                isOnline: false,
+                lastActiveAt: user.lastActiveAt
+              });
+            }
+          }
+        } catch (err) {
+          console.error('WebSockets disconnect database hook error:', err);
+        }
+      }, 2500); // 2.5s delay to cover browser tab refresh
+    }
+  });
+});
+
 // Database connection & Server Startup
 mongoose.connect(MONGODB_URI)
   .then(() => {
     console.log('Successfully connected to MongoDB.');
-    app.listen(PORT, () => {
-      console.log(`Express server running on port ${PORT}`);
+    server.listen(PORT, () => {
+      console.log(`Express server + WebSockets running on port ${PORT}`);
     });
   })
   .catch((err) => {

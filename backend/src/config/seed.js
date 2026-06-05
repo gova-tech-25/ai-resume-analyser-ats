@@ -29,6 +29,7 @@ async function seedDatabase() {
     const student = await User.create({
       username: 'Alex Student',
       email: 'alex.student@example.com',
+      password: 'password123',
       role: 'student',
       profileImage: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex'
     });
@@ -36,6 +37,7 @@ async function seedDatabase() {
     const recruiter = await User.create({
       username: 'Sarah Recruiter',
       email: 'sarah.recruiter@example.com',
+      password: 'password123',
       role: 'recruiter',
       profileImage: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah'
     });
@@ -43,6 +45,7 @@ async function seedDatabase() {
     const admin = await User.create({
       username: 'Devon Admin',
       email: 'devon.admin@example.com',
+      password: 'password123',
       role: 'admin',
       profileImage: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Devon'
     });

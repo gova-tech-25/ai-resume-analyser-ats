@@ -7,11 +7,12 @@ import LandingPage from './pages/LandingPage';
 import StudentDashboard from './pages/StudentDashboard';
 import RecruiterDashboard from './pages/RecruiterDashboard';
 import AdminDashboard from './pages/AdminDashboard';
+import Login from './pages/Login';
 import { RefreshCw } from 'lucide-react';
 
 // A layout wrapper for protected dashboards
 function DashboardLayout() {
-  const { activeRole, loading } = useRole();
+  const { activeRole, loading, isAuthenticated } = useRole();
   const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
@@ -42,6 +43,11 @@ function DashboardLayout() {
         <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Loading Workspace Profiles...</span>
       </div>
     );
+  }
+
+  // Redirect to login if not authenticated
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
   }
 
   // Choose the dashboard page based on active simulated role
@@ -78,6 +84,9 @@ export default function App() {
         <Routes>
           {/* Landing Portal */}
           <Route path="/" element={<LandingPage />} />
+          
+          {/* Authentication Portal */}
+          <Route path="/login" element={<Login />} />
           
           {/* Dashboard Portal (switches dashboard components dynamically) */}
           <Route path="/dashboard" element={<DashboardLayout />} />

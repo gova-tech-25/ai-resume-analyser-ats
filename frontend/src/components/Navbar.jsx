@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useRole } from '../context/RoleContext';
-import { Bell, Sun, Moon, Sparkles, ChevronDown, Check, User as UserIcon, Menu, X } from 'lucide-react';
+import { Bell, Sun, Moon, Sparkles, ChevronDown, Check, User as UserIcon, Menu, X, LogOut } from 'lucide-react';
 
 export default function Navbar() {
   const { 
@@ -13,7 +13,8 @@ export default function Navbar() {
     notifications,
     markNotificationRead,
     mobileMenuOpen,
-    setMobileMenuOpen 
+    setMobileMenuOpen,
+    logout
   } = useRole();
 
   const [showRoleMenu, setShowRoleMenu] = useState(false);
@@ -165,6 +166,15 @@ export default function Navbar() {
             </div>
           )}
         </div>
+
+        {/* Logout Button */}
+        <button
+          onClick={logout}
+          className="p-2 rounded-xl border border-slate-200/50 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200/50 dark:border-slate-800/50 dark:hover:bg-rose-950/20 dark:hover:text-rose-400 dark:hover:border-rose-950/30 text-slate-600 dark:text-slate-300 transition-all"
+          title="Sign Out"
+        >
+          <LogOut className="w-4 h-4" />
+        </button>
 
         {/* Current User Info */}
         <div className="hidden md:flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-800">
