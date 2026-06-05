@@ -54,50 +54,14 @@ export default function Navbar() {
       {/* Right Actions */}
       <div className="flex items-center gap-4 relative">
         
-        {/* Role Selector Trigger */}
-        <div className="relative">
-          <button 
-            onClick={() => { setShowRoleMenu(!showRoleMenu); setShowNotifMenu(false); }}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200/50 hover:bg-slate-100 dark:border-slate-800/50 dark:hover:bg-slate-900 transition-all text-sm font-medium"
-          >
-            {activeUser?.profileImage ? (
-              <img src={activeUser.profileImage} alt="Avatar" className="w-5 h-5 rounded-full" />
-            ) : (
-              <UserIcon className="w-4 h-4 text-slate-400" />
-            )}
-            <span className="capitalize hidden sm:inline">{activeRole} Mode</span>
-            <ChevronDown className="w-4 h-4 text-slate-400" />
-          </button>
-
-          {showRoleMenu && (
-            <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-slate-200/50 bg-white/95 p-1 shadow-lg dark:border-slate-800/50 dark:bg-slate-950/95 backdrop-blur-md z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-              <div className="px-3 py-1.5 text-xs font-semibold text-slate-400">Switch Workspace Role</div>
-              {['student', 'recruiter', 'admin'].map((role) => {
-                const user = profiles.find(p => p.role === role);
-                return (
-                  <button
-                    key={role}
-                    onClick={() => {
-                      switchRole(role);
-                      setShowRoleMenu(false);
-                    }}
-                    className={`flex items-center justify-between w-full text-left px-3 py-2 rounded-xl text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors ${
-                      activeRole === role ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-700 dark:text-slate-300'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <img src={user?.profileImage || `https://api.dicebear.com/7.x/initials/svg?seed=${role}`} alt={role} className="w-5 h-5 rounded-full" />
-                      <div>
-                        <div className="capitalize font-semibold text-xs leading-none">{role}</div>
-                        <div className="text-[10px] text-slate-400 font-normal mt-0.5">{user?.username}</div>
-                      </div>
-                    </div>
-                    {activeRole === role && <Check className="w-4 h-4 text-indigo-500" />}
-                  </button>
-                );
-              })}
-            </div>
+        {/* User Role Status Badge */}
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200/50 dark:border-slate-800/50 text-sm font-medium bg-slate-100/30 dark:bg-slate-900/30 backdrop-blur-md">
+          {activeUser?.profileImage ? (
+            <img src={activeUser.profileImage} alt="Avatar" className="w-5 h-5 rounded-full" />
+          ) : (
+            <UserIcon className="w-4 h-4 text-slate-400" />
           )}
+          <span className="capitalize">{activeRole} Mode</span>
         </div>
 
         {/* Theme Toggle */}

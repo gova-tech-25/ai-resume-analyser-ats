@@ -98,7 +98,7 @@ export default function Sidebar() {
               {activeRole} Dashboard
             </div>
             <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
-              Toggle workspace roles in top bar dropdown.
+              Access your workspace portal tools and analytics.
             </p>
           </div>
           <div className="text-[10px] text-center text-slate-400">

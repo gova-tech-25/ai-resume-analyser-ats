@@ -224,7 +224,6 @@ export default function Login() {
                     >
                       <option value="student" className="bg-slate-900 text-white">Student / Candidate</option>
                       <option value="recruiter" className="bg-slate-900 text-white">Recruiter / Employer</option>
-                      <option value="admin" className="bg-slate-900 text-white">Administrator</option>
                     </select>
                   </div>
                 </div>

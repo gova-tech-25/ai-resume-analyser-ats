@@ -63,7 +63,7 @@ export default function LandingPage() {
     },
     {
       q: "Can I test all role dashboards?",
-      a: "Yes! Use the role selector dropdown in the top navigation bar to toggle instantly between Student, Recruiter, and Admin panels.",
+      a: "Yes! You can register accounts for different roles (Student or Recruiter) and sign in to access their custom portals, or log in with our default pre-seeded profiles.",
       open: false
     }
   ]);
