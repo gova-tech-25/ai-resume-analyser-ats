@@ -25,6 +25,8 @@ export const RoleProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
 
+  axios.defaults.withCredentials = true;
+
   // Set initial axios auth headers if token exists
   if (token) {
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
@@ -197,6 +199,25 @@ export const RoleProvider = ({ children }) => {
     }
   };
 
+  const forgotPassword = async (email) => {
+    const res = await axios.post('/api/auth/forgot-password', { email });
+    return res.data;
+  };
+
+  const resetPassword = async (token, password) => {
+    const res = await axios.post('/api/auth/reset-password', { token, password });
+    return res.data;
+  };
+
+  const updateProfile = async (formData) => {
+    const res = await axios.put('/api/auth/profile', formData);
+    const { user } = res.data;
+    setActiveUser(user);
+    localStorage.setItem('activeUser', JSON.stringify(user));
+    fetchProfiles();
+    return res.data;
+  };
+
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
@@ -223,6 +244,9 @@ export const RoleProvider = ({ children }) => {
       login,
       register,
       logout,
+      forgotPassword,
+      resetPassword,
+      updateProfile,
       switchRole,
       toggleTheme,
       getAuthHeaders,

@@ -79,9 +79,10 @@ ATSify uses a secure, production-grade **JWT (JSON Web Token)** bearer authentic
 
 ### Key Authentication Flows
 1. **User Accounts**: Registration and Login forms allow users to sign up or authenticate as a **Student**, **Recruiter**, or **Admin**.
-2. **Session Verification**: Secure backend routes verify bearer tokens from `Authorization: Bearer <JWT_TOKEN>` headers.
+2. **Session Verification**: Secure backend routes verify bearer tokens from the `Authorization: Bearer <JWT_TOKEN>` header or directly from secure **HttpOnly cookies** (parsed via `cookie-parser`).
 3. **Password Security**: Passwords are securely hashed with **bcryptjs** in MongoDB.
-4. **WebSocket Syncing**: Upon successful authentication, the React client initiates a WebSocket connection to the backend. The backend updates the user's online state (`isOnline: true`) in MongoDB and broadcasts user state updates in real-time.
+4. **CORS & Credentials**: The backend server is configured with credentials support (`credentials: true`) and allows authorized requests from the React client origin.
+5. **WebSocket Syncing**: Upon successful authentication, the React client initiates a WebSocket connection to the backend. The backend updates the user's online state (`isOnline: true`) in MongoDB and broadcasts user state updates in real-time.
 
 ### Development Role Switcher Dropdown
 For developer convenience during testing, the top-right header contains a simulated role selector dropdown. Selecting a role from this dropdown executes a real background login with seed credentials (`alex.student@example.com`, `sarah.recruiter@example.com`, `devon.admin@example.com` using password `password123`) to seamlessly switch your active workspace while verifying your token integrity and socket connection in real-time.

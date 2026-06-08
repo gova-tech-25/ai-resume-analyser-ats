@@ -101,12 +101,46 @@ export default function RecruiterDashboard({ tab = 'jobs' }) {
 
   const handlePostJob = async (e) => {
     e.preventDefault();
+
+    // Strict Client-Side validation
+    const trimmedTitle = newJob.title.trim();
+    const trimmedCompany = newJob.company.trim();
+    const trimmedLocation = newJob.location.trim();
+    const trimmedSalaryRange = newJob.salaryRange.trim();
+    const trimmedDescription = newJob.description.trim();
+    const trimmedRequirements = newJob.requirements.trim();
+    const trimmedSkillsRequired = newJob.skillsRequired.trim();
+
+    if (!trimmedTitle || !trimmedCompany || !trimmedLocation || !trimmedSalaryRange || !trimmedDescription || !trimmedRequirements || !trimmedSkillsRequired) {
+      alert('Please fill in all fields.');
+      return;
+    }
+
+    if (trimmedTitle.length < 3) {
+      alert('Job Title must be at least 3 characters.');
+      return;
+    }
+
+    if (trimmedCompany.length < 2) {
+      alert('Company Name must be at least 2 characters.');
+      return;
+    }
+
+    if (trimmedDescription.length < 20) {
+      alert('Core Job Description must be at least 20 characters.');
+      return;
+    }
+
     try {
       setFormPosting(true);
       const reqPayload = {
-        ...newJob,
-        requirements: newJob.requirements.split('\n').filter(r => r.trim().length > 0),
-        skillsRequired: newJob.skillsRequired.split(',').map(s => s.trim()).filter(s => s.length > 0)
+        title: trimmedTitle,
+        company: trimmedCompany,
+        location: trimmedLocation,
+        salaryRange: trimmedSalaryRange,
+        description: trimmedDescription,
+        requirements: trimmedRequirements.split('\n').filter(r => r.trim().length > 0),
+        skillsRequired: trimmedSkillsRequired.split(',').map(s => s.trim()).filter(s => s.length > 0)
       };
 
       await axios.post('/api/jobs', reqPayload, { headers: getAuthHeaders() });

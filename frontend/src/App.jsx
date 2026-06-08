@@ -8,6 +8,7 @@ import StudentDashboard from './pages/StudentDashboard';
 import RecruiterDashboard from './pages/RecruiterDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import Login from './pages/Login';
+import ResetPassword from './pages/ResetPassword';
 import { RefreshCw } from 'lucide-react';
 
 // A layout wrapper for protected dashboards
@@ -87,6 +88,9 @@ export default function App() {
           
           {/* Authentication Portal */}
           <Route path="/login" element={<Login />} />
+          
+          {/* Password Reset Link */}
+          <Route path="/reset-password" element={<ResetPassword />} />
           
           {/* Dashboard Portal (switches dashboard components dynamically) */}
           <Route path="/dashboard" element={<DashboardLayout />} />

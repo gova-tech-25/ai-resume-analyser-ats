@@ -14,8 +14,11 @@ export default function Login() {
   }, [isAuthenticated, navigate]);
 
   const [isLoginTab, setIsLoginTab] = useState(true);
+  const [isForgotPanel, setIsForgotPanel] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotSuccess, setForgotSuccess] = useState('');
 
   // Form states
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
@@ -29,14 +32,27 @@ export default function Login() {
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    if (!loginForm.email || !loginForm.password) {
+    const trimmedEmail = loginForm.email.trim();
+
+    if (!trimmedEmail || !loginForm.password) {
       setError('Please fill in all fields.');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+
+    if (loginForm.password.length < 6) {
+      setError('Password must be at least 6 characters long.');
       return;
     }
 
     try {
       setLoading(true);
-      await login(loginForm.email, loginForm.password);
+      await login(trimmedEmail, loginForm.password);
       navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed. Please check credentials.');
@@ -48,20 +64,68 @@ export default function Login() {
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    if (!registerForm.username || !registerForm.email || !registerForm.password || !registerForm.role) {
+    const trimmedUsername = registerForm.username.trim();
+    const trimmedEmail = registerForm.email.trim();
+
+    if (!trimmedUsername || !trimmedEmail || !registerForm.password || !registerForm.role) {
       setError('Please fill in all fields.');
+      return;
+    }
+
+    if (trimmedUsername.length < 3) {
+      setError('Username must be at least 3 characters long.');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+
+    if (registerForm.password.length < 6) {
+      setError('Password must be at least 6 characters long.');
       return;
     }
 
     try {
       setLoading(true);
-      await register(registerForm.username, registerForm.email, registerForm.password, registerForm.role);
+      await register(trimmedUsername, trimmedEmail, registerForm.password, registerForm.role);
       // Auto switch to login tab on success
       setIsLoginTab(true);
-      setLoginForm({ email: registerForm.email, password: '' });
+      setLoginForm({ email: trimmedEmail, password: '' });
       alert('Registration successful! You can now log in.');
     } catch (err) {
       setError(err.response?.data?.error || 'Registration failed. Try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setForgotSuccess('');
+    const trimmedEmail = forgotEmail.trim();
+
+    if (!trimmedEmail) {
+      setError('Please enter your email address.');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      setError('Please enter a valid email address.');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const res = await forgotPassword(trimmedEmail);
+      setForgotSuccess(res?.message || 'If a user with that email exists, a password reset link has been sent.');
+      setForgotEmail('');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to send reset link. Try again.');
     } finally {
       setLoading(false);
     }
@@ -89,31 +153,33 @@ export default function Login() {
 
         {/* Auth Box Card */}
         <div className="glass-panel border border-slate-800/60 shadow-2xl rounded-3xl overflow-hidden backdrop-blur-md">
-          {/* Tab Selector */}
-          <div className="flex border-b border-slate-800/60 bg-slate-950/20">
-            <button
-              onClick={() => { setIsLoginTab(true); setError(''); }}
-              className={`flex-1 py-4 text-sm font-bold transition-all duration-300 relative ${
-                isLoginTab ? 'text-white' : 'text-slate-500 hover:text-slate-300'
-              }`}
-            >
-              Sign In
-              {isLoginTab && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-indigo-500 to-purple-500" />
-              )}
-            </button>
-            <button
-              onClick={() => { setIsLoginTab(false); setError(''); }}
-              className={`flex-1 py-4 text-sm font-bold transition-all duration-300 relative ${
-                !isLoginTab ? 'text-white' : 'text-slate-500 hover:text-slate-300'
-              }`}
-            >
-              Create Account
-              {!isLoginTab && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-indigo-500 to-purple-500" />
-              )}
-            </button>
-          </div>
+          {/* Tab Selector - Hide if forgot panel is shown */}
+          {!isForgotPanel && (
+            <div className="flex border-b border-slate-800/60 bg-slate-950/20">
+              <button
+                onClick={() => { setIsLoginTab(true); setError(''); }}
+                className={`flex-1 py-4 text-sm font-bold transition-all duration-300 relative ${
+                  isLoginTab ? 'text-white' : 'text-slate-500 hover:text-slate-300'
+                }`}
+              >
+                Sign In
+                {isLoginTab && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-indigo-500 to-purple-500" />
+                )}
+              </button>
+              <button
+                onClick={() => { setIsLoginTab(false); setError(''); }}
+                className={`flex-1 py-4 text-sm font-bold transition-all duration-300 relative ${
+                  !isLoginTab ? 'text-white' : 'text-slate-500 hover:text-slate-300'
+                }`}
+              >
+                Create Account
+                {!isLoginTab && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-indigo-500 to-purple-500" />
+                )}
+              </button>
+            </div>
+          )}
 
           <div className="p-8">
             {error && (
@@ -123,7 +189,56 @@ export default function Login() {
               </div>
             )}
 
-            {isLoginTab ? (
+            {isForgotPanel ? (
+              /* --- FORGOT PASSWORD FORM --- */
+              <form onSubmit={handleForgotSubmit} className="flex flex-col gap-4">
+                <div className="text-center mb-2">
+                  <h3 className="text-lg font-bold text-white">Forgot Password</h3>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Enter your registered email address below and we'll send you a password reset link.
+                  </p>
+                </div>
+
+                {forgotSuccess && (
+                  <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold flex items-center gap-3 mb-4">
+                    <ShieldCheck className="w-5 h-5 flex-shrink-0" />
+                    <span>{forgotSuccess}</span>
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-slate-400">Email Address</label>
+                  <div className="relative">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                    <input
+                      type="email"
+                      required
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      placeholder="name@example.com"
+                      className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-800/80 bg-slate-950/40 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none focus:border-indigo-500/50 transition-all text-white placeholder-slate-600"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full mt-2 py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 active:scale-[0.98] transition-all font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:pointer-events-none"
+                >
+                  {loading ? 'Sending Link...' : 'Send Reset Link'}
+                  {!loading && <ArrowRight className="w-4 h-4" />}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setIsForgotPanel(false); setError(''); setForgotSuccess(''); }}
+                  className="text-xs font-bold text-slate-400 hover:text-white transition-colors text-center mt-2"
+                >
+                  Back to Sign In
+                </button>
+              </form>
+            ) : isLoginTab ? (
               /* --- SIGN IN FORM --- */
               <form onSubmit={handleLoginSubmit} className="flex flex-col gap-4">
                 <div className="flex flex-col gap-1.5">
@@ -156,10 +271,20 @@ export default function Login() {
                   </div>
                 </div>
 
+                <div className="flex justify-end -mt-1">
+                  <button
+                    type="button"
+                    onClick={() => { setIsForgotPanel(true); setError(''); setForgotSuccess(''); }}
+                    className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition-colors"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full mt-4 py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 active:scale-[0.98] transition-all font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:pointer-events-none"
+                  className="w-full mt-2 py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 active:scale-[0.98] transition-all font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:pointer-events-none"
                 >
                   {loading ? 'Signing In...' : 'Sign In'}
                   {!loading && <ArrowRight className="w-4 h-4" />}

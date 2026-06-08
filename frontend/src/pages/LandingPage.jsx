@@ -3,11 +3,14 @@ import { Link } from 'react-router-dom';
 import { useRole } from '../context/RoleContext';
 import { 
   Sparkles, FileText, CheckCircle, Brain, ArrowRight, 
-  ShieldCheck, Mail, Phone, MapPin, Menu, X, Sun, Moon, Box 
+  ShieldCheck, Mail, Phone, MapPin, Menu, X, Sun, Moon, Box,
+  User as UserIcon, Settings
 } from 'lucide-react';
+import ProfileModal from '../components/ProfileModal';
 
 export default function LandingPage() {
-  const { theme, toggleTheme } = useRole();
+  const { theme, toggleTheme, isAuthenticated, activeUser } = useRole();
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [is3DMode, setIs3DMode] = useState(() => {
     return localStorage.getItem('atsify-3d') === 'true';
   });
@@ -77,6 +80,31 @@ export default function LandingPage() {
 
   const handleContactSubmit = (e) => {
     e.preventDefault();
+    const trimmedName = formData.name.trim();
+    const trimmedEmail = formData.email.trim();
+    const trimmedMessage = formData.message.trim();
+
+    if (!trimmedName || !trimmedEmail || !trimmedMessage) {
+      alert('Please fill in all fields.');
+      return;
+    }
+
+    if (trimmedName.length < 2) {
+      alert('Name must be at least 2 characters long.');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+
+    if (trimmedMessage.length < 10) {
+      alert('Message must be at least 10 characters long.');
+      return;
+    }
+
     setContactSubmitted(true);
     setTimeout(() => {
       setContactSubmitted(false);
@@ -127,6 +155,21 @@ export default function LandingPage() {
             >
               {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
             </button>
+            {isAuthenticated && (
+              <button
+                onClick={() => setShowProfileModal(true)}
+                className="p-2 rounded-xl border border-slate-200/50 hover:bg-indigo-50 hover:text-indigo-600 dark:border-slate-800/50 dark:hover:bg-indigo-950/20 dark:hover:text-indigo-400 text-slate-600 dark:text-slate-300 transition-all flex items-center gap-2 shadow-sm"
+                title="Manage Profile Settings"
+              >
+                {activeUser?.profileImage ? (
+                  <img src={activeUser.profileImage} alt="Avatar" className="w-5 h-5 rounded-full" />
+                ) : (
+                  <UserIcon className="w-4 h-4 text-slate-400" />
+                )}
+                <span className="text-xs font-bold hidden lg:inline">{activeUser?.username}</span>
+                <Settings className="w-3.5 h-3.5 text-slate-450 dark:text-slate-400 animate-spin-slow" />
+              </button>
+            )}
             <Link
               to="/dashboard"
               className="px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-md shadow-indigo-500/20 hover:shadow-indigo-500/30 transition-all text-xs"
@@ -137,6 +180,19 @@ export default function LandingPage() {
 
           {/* Mobile menu controls */}
           <div className="flex items-center gap-3 md:hidden">
+            {isAuthenticated && (
+              <button
+                onClick={() => setShowProfileModal(true)}
+                className="p-2 rounded-xl border border-slate-200/50 hover:bg-slate-100 dark:border-slate-800/50 dark:hover:bg-slate-900 text-slate-600 dark:text-slate-300 transition-all flex items-center justify-center shadow-sm"
+                title="Manage Profile Settings"
+              >
+                {activeUser?.profileImage ? (
+                  <img src={activeUser.profileImage} alt="Avatar" className="w-4.5 h-4.5 rounded-full" />
+                ) : (
+                  <UserIcon className="w-4 h-4 text-slate-400" />
+                )}
+              </button>
+            )}
             <button
               onClick={toggle3DMode}
               className={`p-2 rounded-xl border transition-all ${
@@ -188,6 +244,22 @@ export default function LandingPage() {
                 {is3DMode ? 'ON' : 'OFF'}
               </span>
             </button>
+            {isAuthenticated && (
+              <button
+                onClick={() => {
+                  setShowProfileModal(true);
+                  setMobileMenuOpen(false);
+                }}
+                className="py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-800 text-left text-sm font-semibold flex items-center gap-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900/50"
+              >
+                {activeUser?.profileImage ? (
+                  <img src={activeUser.profileImage} alt="Avatar" className="w-5 h-5 rounded-full" />
+                ) : (
+                  <UserIcon className="w-4 h-4 text-slate-400" />
+                )}
+                <span>Profile Settings ({activeUser?.username})</span>
+              </button>
+            )}
             <Link
               to="/dashboard"
               onClick={() => setMobileMenuOpen(false)}
@@ -257,12 +329,21 @@ export default function LandingPage() {
               >
                 Launch Platform Dashboard <ArrowRight className="w-4 h-4" />
               </Link>
-              <a
-                href="#about"
-                className="flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-xs md:text-sm text-slate-700 dark:text-slate-200"
-              >
-                Explore Features
-              </a>
+              {isAuthenticated ? (
+                <button
+                  onClick={() => setShowProfileModal(true)}
+                  className="flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-xs md:text-sm text-slate-700 dark:text-slate-200 shadow-md"
+                >
+                  <Settings className="w-4 h-4 text-indigo-500 animate-spin-slow" /> Profile Management
+                </button>
+              ) : (
+                <a
+                  href="#about"
+                  className="flex items-center justify-center gap-2 px-8 py-3.5 rounded-2xl bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-xs md:text-sm text-slate-700 dark:text-slate-200"
+                >
+                  Explore Features
+                </a>
+              )}
             </div>
           </div>
         </section>
@@ -437,6 +518,8 @@ export default function LandingPage() {
           )}
         </div>
       </section>
+
+      <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
     </div>
   );
 }

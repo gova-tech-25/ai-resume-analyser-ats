@@ -59,22 +59,34 @@ const deleteUser = async (req, res) => {
  */
 const createUser = async (req, res) => {
   try {
-    const { username, email, role } = req.body;
+    const { username, email, role, password } = req.body;
+    const trimmedUsername = username?.trim();
+    const trimmedEmail = email?.trim();
 
-    if (!username || !email || !role) {
+    if (!trimmedUsername || !trimmedEmail || !role) {
       return res.status(400).json({ error: 'Username, email, and role are required.' });
+    }
+
+    if (trimmedUsername.length < 3) {
+      return res.status(400).json({ error: 'Username must be at least 3 characters long.' });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      return res.status(400).json({ error: 'Please enter a valid email address.' });
     }
 
     if (!['student', 'recruiter', 'admin'].includes(role)) {
       return res.status(400).json({ error: 'Invalid role.' });
     }
 
-    const profileImage = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(username)}`;
+    const profileImage = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(trimmedUsername)}`;
 
     const user = await User.create({
-      username,
-      email,
+      username: trimmedUsername,
+      email: trimmedEmail.toLowerCase(),
       role,
+      password: password || 'password123',
       profileImage
     });
 
@@ -97,15 +109,36 @@ const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
     const { username, email, role } = req.body;
+    const trimmedUsername = username?.trim();
+    const trimmedEmail = email?.trim();
 
     const user = await User.findById(id);
     if (!user) {
       return res.status(404).json({ error: 'User not found.' });
     }
 
-    if (username) user.username = username;
-    if (email) user.email = email;
-    if (role) {
+    if (username !== undefined) {
+      if (!trimmedUsername) {
+        return res.status(400).json({ error: 'Username cannot be empty.' });
+      }
+      if (trimmedUsername.length < 3) {
+        return res.status(400).json({ error: 'Username must be at least 3 characters long.' });
+      }
+      user.username = trimmedUsername;
+    }
+
+    if (email !== undefined) {
+      if (!trimmedEmail) {
+        return res.status(400).json({ error: 'Email cannot be empty.' });
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(trimmedEmail)) {
+        return res.status(400).json({ error: 'Please enter a valid email address.' });
+      }
+      user.email = trimmedEmail.toLowerCase();
+    }
+
+    if (role !== undefined) {
       if (!['student', 'recruiter', 'admin'].includes(role)) {
         return res.status(400).json({ error: 'Invalid role.' });
       }
@@ -116,7 +149,7 @@ const updateUser = async (req, res) => {
     }
 
     if (username) {
-      user.profileImage = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(username)}`;
+      user.profileImage = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(trimmedUsername)}`;
     }
 
     await user.save();

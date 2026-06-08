@@ -88,18 +88,39 @@ export default function AdminDashboard() {
 
   const handleUserFormSubmit = async (e) => {
     e.preventDefault();
-    if (!userForm.username || !userForm.email || !userForm.role) {
+    const trimmedUsername = userForm.username.trim();
+    const trimmedEmail = userForm.email.trim();
+
+    if (!trimmedUsername || !trimmedEmail || !userForm.role) {
       alert('Please fill out all fields.');
       return;
     }
+
+    if (trimmedUsername.length < 3) {
+      alert('Username must be at least 3 characters long.');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+
     try {
       setFormSubmitting(true);
+      const reqPayload = {
+        username: trimmedUsername,
+        email: trimmedEmail,
+        role: userForm.role
+      };
+
       if (showUserModal === 'create') {
-        const res = await axios.post('/api/admin/users', userForm, { headers: getAuthHeaders() });
+        const res = await axios.post('/api/admin/users', reqPayload, { headers: getAuthHeaders() });
         setUsers(prev => [res.data.user, ...prev]);
         alert('User created successfully.');
       } else if (showUserModal === 'edit' && editingUserId) {
-        const res = await axios.put(`/api/admin/users/${editingUserId}`, userForm, { headers: getAuthHeaders() });
+        const res = await axios.put(`/api/admin/users/${editingUserId}`, reqPayload, { headers: getAuthHeaders() });
         setUsers(prev => prev.map(u => u._id === editingUserId ? res.data.user : u));
         alert('User updated successfully.');
       }

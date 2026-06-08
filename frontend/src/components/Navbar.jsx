@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRole } from '../context/RoleContext';
-import { Bell, Sun, Moon, Sparkles, ChevronDown, Check, User as UserIcon, Menu, X, LogOut } from 'lucide-react';
+import { Bell, Sun, Moon, Sparkles, ChevronDown, Check, User as UserIcon, Menu, X, LogOut, Settings, AlertTriangle, RefreshCw } from 'lucide-react';
+import ProfileModal from './ProfileModal';
 
 export default function Navbar() {
   const { 
@@ -14,11 +15,13 @@ export default function Navbar() {
     markNotificationRead,
     mobileMenuOpen,
     setMobileMenuOpen,
-    logout
+    logout,
+    updateProfile
   } = useRole();
 
   const [showRoleMenu, setShowRoleMenu] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   const unreadNotifs = notifications.filter(n => !n.isRead);
 
@@ -131,6 +134,15 @@ export default function Navbar() {
           )}
         </div>
 
+        {/* Profile Settings Gear */}
+        <button
+          onClick={() => setShowProfileModal(true)}
+          className="p-2 rounded-xl border border-slate-200/50 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200/50 dark:border-slate-800/50 dark:hover:bg-indigo-950/20 dark:hover:text-indigo-400 dark:hover:border-indigo-950/30 text-slate-600 dark:text-slate-300 transition-all"
+          title="Edit Profile Settings"
+        >
+          <Settings className="w-4 h-4" />
+        </button>
+
         {/* Logout Button */}
         <button
           onClick={logout}
@@ -140,8 +152,12 @@ export default function Navbar() {
           <LogOut className="w-4 h-4" />
         </button>
 
-        {/* Current User Info */}
-        <div className="hidden md:flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-800">
+        {/* Current User Info (Clickable for Profile Manage) */}
+        <div 
+          onClick={() => setShowProfileModal(true)}
+          className="hidden md:flex items-center gap-2 pl-2 border-l border-slate-200 dark:border-slate-800 cursor-pointer hover:opacity-80 transition-opacity"
+          title="Manage Profile"
+        >
           <div className="text-right">
             <div className="text-xs font-semibold text-slate-700 dark:text-slate-200 leading-none">{activeUser?.username}</div>
             <span className={`inline-block text-[9px] font-bold uppercase px-1.5 py-0.5 rounded mt-1 ${getRoleBadge(activeRole)}`}>
@@ -151,6 +167,8 @@ export default function Navbar() {
         </div>
 
       </div>
+
+      <ProfileModal isOpen={showProfileModal} onClose={() => setShowProfileModal(false)} />
     </nav>
   );
 }

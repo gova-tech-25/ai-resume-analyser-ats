@@ -14,6 +14,8 @@ const auth = async (req, res, next) => {
 
     if (authHeader && authHeader.startsWith('Bearer ')) {
       token = authHeader.replace('Bearer ', '');
+    } else if (req.cookies && req.cookies.token) {
+      token = req.cookies.token;
     }
 
     if (token) {
