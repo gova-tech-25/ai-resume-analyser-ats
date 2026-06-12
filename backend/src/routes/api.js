@@ -112,6 +112,7 @@ router.post(
 );
 router.get(
   '/jobs',
+  auth,
   jobController.getJobs // Publicly readable for students/recruiters
 );
 router.get(

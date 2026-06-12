@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const { sendResetEmail } = require('../services/emailService');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'atsify_jwt_secret_key_2026';
+const JWT_SECRET = process.env.JWT_SECRET || 'dev_insecure_fallback_key_change_in_prod';
 
 /**
  * Helper to ensure database is seeded if empty

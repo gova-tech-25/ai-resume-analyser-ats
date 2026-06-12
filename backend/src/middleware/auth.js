@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'atsify_jwt_secret_key_2026';
+const JWT_SECRET = process.env.JWT_SECRET || 'dev_insecure_fallback_key_change_in_prod';
 
 /**
  * Middleware to check JWT authentication.
@@ -32,6 +32,9 @@ const auth = async (req, res, next) => {
         req.token = token;
         return next();
       } catch (jwtErr) {
+        if (jwtErr.name === 'TokenExpiredError') {
+          return res.status(401).json({ error: 'Token has expired. Please log in again.' });
+        }
         return res.status(401).json({ error: 'Authentication failed: Invalid or expired token.' });
       }
     }
@@ -45,6 +48,7 @@ const auth = async (req, res, next) => {
         const user = await User.findById(mockUserId);
         if (user) {
           req.user = user;
+          console.warn(`[AUTH] Using mock authentication for user ${user.username} (${user.role})`);
           return next();
         }
       } catch (err) {
@@ -56,8 +60,8 @@ const auth = async (req, res, next) => {
       error: 'Authentication required. Please provide a Bearer token or mock auth headers.'
     });
   } catch (error) {
-    console.error('Auth middleware error:', error);
-    res.status(500).json({ error: 'Internal authentication error: ' + error.message });
+    console.error('[ERROR] Auth middleware error:', error.message);
+    res.status(500).json({ error: 'Internal authentication error.' });
   }
 };
 
@@ -71,7 +75,7 @@ const authorize = (allowedRoles = []) => {
     }
 
     if (allowedRoles.length > 0 && !allowedRoles.includes(req.user.role)) {
-      return res.status(430).json({
+      return res.status(403).json({
         error: `Access Denied. Role '${req.user.role}' is not authorized. Allowed roles: ${allowedRoles.join(', ')}`
       });
     }

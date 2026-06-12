@@ -27,30 +27,90 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 5000;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/ai_resume_analyser';
-const JWT_SECRET = process.env.JWT_SECRET || 'atsify_jwt_secret_key_2026';
+
+// Environment variable validation
+const validateEnv = () => {
+  const errors = [];
+  const warnings = [];
+  
+  if (!process.env.JWT_SECRET) {
+    if (process.env.NODE_ENV === 'production') {
+      errors.push('JWT_SECRET is required in production');
+    } else {
+      warnings.push('JWT_SECRET is not set. Using insecure fallback (not recommended for production).');
+    }
+  }
+  
+  if (!process.env.MONGODB_URI && process.env.NODE_ENV === 'production') {
+    errors.push('MONGODB_URI is required in production');
+  }
+  
+  if (!process.env.AI_SERVICE_URL) {
+    warnings.push('AI_SERVICE_URL not set. Defaulting to http://localhost:8000');
+  }
+  
+  if (errors.length > 0) {
+    console.error('[FATAL] Environment validation errors:');
+    errors.forEach(e => console.error(`  - ${e}`));
+    process.exit(1);
+  }
+  
+  if (warnings.length > 0) {
+    warnings.forEach(w => console.warn(`[WARN] ${w}`));
+  }
+};
+
+validateEnv();
+
+const JWT_SECRET = process.env.JWT_SECRET || 'dev_insecure_fallback_key_change_in_prod';
 
 // Rate limiters
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 mins
   max: 100, // limit each IP to 100 requests per windowMs
-  message: { error: 'Too many requests from this IP, please try again after 15 minutes.' }
+  message: { error: 'Too many requests from this IP, please try again after 15 minutes.' },
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false // Disable the `X-RateLimit-*` headers
 });
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20, // limit auth attempts to 20 per 15 mins
-  message: { error: 'Too many authentication attempts, please try again after 15 minutes.' }
+  message: { error: 'Too many authentication attempts, please try again after 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false
 });
 
 // Middlewares
 app.use(helmet({
-  crossOriginResourcePolicy: false // Allows files uploaded to backend to be retrieved if needed
+  crossOriginResourcePolicy: false, // Allows files uploaded to backend to be retrieved if needed
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  },
 }));
+const allowedOrigins = [
+  process.env.CLIENT_URL || 'http://localhost:3000',
+  'http://localhost:5173'
+];
+
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`CORS rejected request from origin: ${origin}`);
+      callback(new Error('CORS not allowed from this origin'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 200
 }));
 app.use(cookieParser());
 app.use(morgan('dev'));
@@ -69,12 +129,27 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/api', apiRouter);
 
 // Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({
+app.get('/health', async (req, res) => {
+  const healthStatus = {
     status: 'healthy',
-    timestamp: new Date(),
+    timestamp: new Date().toISOString(),
     mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
-  });
+  };
+
+  // Check AI service connectivity
+  try {
+    const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:8000';
+    const response = await fetch(`${aiServiceUrl}/`, { 
+      method: 'GET',
+      signal: AbortSignal.timeout(3000) // 3 second timeout
+    });
+    healthStatus.ai_service = response.ok ? 'connected' : 'unhealthy';
+  } catch (err) {
+    healthStatus.ai_service = 'disconnected';
+    healthStatus.warning = 'AI service is not reachable. The system will use fallback analysis.';
+  }
+
+  res.status(healthStatus.mongodb === 'disconnected' ? 503 : 200).json(healthStatus);
 });
 
 // Serve static assets in production (React build)
@@ -94,9 +169,20 @@ if (process.env.NODE_ENV === 'production') {
 
 // Global Error Handler
 app.use((err, req, res, next) => {
-  console.error('Unhandled Error:', err);
+  const errorMessage = err.message || 'An unexpected server error occurred.';
+  console.error(`[ERROR] ${new Date().toISOString()} - ${req.method} ${req.path} - ${errorMessage}`);
+  console.error(err.stack || '');
+  
+  // Don't leak sensitive error details in production
+  if (process.env.NODE_ENV === 'production' && !err.isOperational) {
+    return res.status(500).json({
+      error: 'An unexpected error occurred. Please try again later.'
+    });
+  }
+  
   res.status(err.status || 500).json({
-    error: err.message || 'An unexpected server error occurred.'
+    error: errorMessage,
+    ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
   });
 });
 
@@ -170,7 +256,7 @@ io.on('connection', (socket) => {
       const userId = socket.userId;
       
       // Debounce the offline status change to prevent flicker on page reload/refresh
-      setTimeout(async () => {
+      const debounceTimer = setTimeout(async () => {
         try {
           const activeSockets = await io.fetchSockets();
           const isStillConnected = activeSockets.some(s => s.userId === userId);
@@ -178,25 +264,34 @@ io.on('connection', (socket) => {
           if (!isStillConnected) {
             const user = await User.findById(userId);
             if (user) {
+              const wasOnline = user.isOnline;
               user.isOnline = false;
               user.lastActiveAt = new Date();
               await user.save();
               
-              console.log(`WebSockets: User ${user.username} logged off.`);
-              
-              io.emit('userStatusChanged', {
-                userId: user._id,
-                username: user.username,
-                role: user.role,
-                isOnline: false,
-                lastActiveAt: user.lastActiveAt
-              });
+              // Only emit if status actually changed
+              if (wasOnline) {
+                console.log(`WebSockets: User ${user.username} logged off.`);
+                
+                io.emit('userStatusChanged', {
+                  userId: user._id,
+                  username: user.username,
+                  role: user.role,
+                  isOnline: false,
+                  lastActiveAt: user.lastActiveAt
+                });
+              }
             }
           }
         } catch (err) {
-          console.error('WebSockets disconnect database hook error:', err);
+          console.error('WebSockets disconnect database hook error:', err.message);
         }
       }, 2500); // 2.5s delay to cover browser tab refresh
+      
+      // Clean up timer reference on socket
+      socket.on('disconnecting', () => {
+        clearTimeout(debounceTimer);
+      });
     }
   });
 });

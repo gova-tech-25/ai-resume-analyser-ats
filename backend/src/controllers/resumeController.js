@@ -16,22 +16,40 @@ const uploadResume = async (req, res) => {
       return res.status(400).json({ error: 'No file uploaded.' });
     }
 
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    if (req.file.size > MAX_FILE_SIZE) {
+      return res.status(400).json({ error: 'File size exceeds the 5MB limit.' });
+    }
+
     const { originalname, path: filePath } = req.file;
     const fileType = originalname.split('.').pop().toLowerCase();
     
     if (fileType !== 'pdf' && fileType !== 'docx') {
+      // Clean up uploaded file
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
       return res.status(400).json({ error: 'Only PDF and DOCX files are allowed.' });
     }
 
-    console.log(`Parsing file: ${originalname} (${fileType}) at path: ${filePath}`);
+    console.log(`[INFO] Parsing file: ${originalname} (${fileType}) at path: ${filePath}`);
     const text = await parseFile(filePath, fileType);
     
     if (!text || text.trim().length === 0) {
+      // Clean up uploaded file
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
       return res.status(400).json({ error: 'Extracted text is empty. The file may be corrupt or scanned image-only.' });
     }
 
-    console.log('Sending parsed text to AI microservice...');
+    console.log('[INFO] Sending parsed text to AI microservice...');
     const aiAnalysis = await analyzeResume(text);
+    
+    // Validate AI response
+    if (!aiAnalysis || !aiAnalysis.ats_score) {
+      console.warn('[WARN] AI analysis returned incomplete results');
+    }
 
     // Save Resume
     const resume = await Resume.create({
@@ -48,11 +66,11 @@ const uploadResume = async (req, res) => {
     // Save ATS Report
     const report = await ATSReport.create({
       resume: resume._id,
-      atsScore: aiAnalysis.ats_score,
+      atsScore: aiAnalysis.ats_score || 0,
       missingKeywords: aiAnalysis.missing_keywords || [],
       matchingKeywords: aiAnalysis.matching_keywords || [],
-      grammarScore: aiAnalysis.grammar_score,
-      sectionsScore: aiAnalysis.sections_score,
+      grammarScore: aiAnalysis.grammar_score || 0,
+      sectionsScore: aiAnalysis.sections_score || 0,
       improvements: aiAnalysis.improvements || [],
       suggestedProjects: aiAnalysis.suggested_projects || [],
       suggestedCertifications: aiAnalysis.suggested_certifications || []
@@ -62,7 +80,7 @@ const uploadResume = async (req, res) => {
     await Notification.create({
       user: req.user._id,
       title: 'Resume Analyzed!',
-      message: `Your resume "${originalname}" was parsed. ATS score: ${aiAnalysis.ats_score}%`,
+      message: `Your resume "${originalname}" was parsed. ATS score: ${aiAnalysis.ats_score || 0}%`,
       type: 'success'
     });
 
@@ -72,8 +90,18 @@ const uploadResume = async (req, res) => {
       report
     });
   } catch (error) {
-    console.error('Upload and analysis error:', error);
-    res.status(500).json({ error: 'Failed to process resume: ' + error.message });
+    console.error('[ERROR] Upload and analysis error:', error.message);
+    // Clean up uploaded file on error
+    if (req.file && req.file.path) {
+      try {
+        if (fs.existsSync(req.file.path)) {
+          fs.unlinkSync(req.file.path);
+        }
+      } catch (cleanupErr) {
+        console.error('[ERROR] Failed to cleanup uploaded file:', cleanupErr.message);
+      }
+    }
+    res.status(500).json({ error: 'Failed to process resume. Please try again.' });
   }
 };
 
