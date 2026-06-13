@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useRole } from '../context/RoleContext';
 import axios from 'axios';
 import { useSearchParams } from 'react-router-dom';
+import ProfileSettingsPanel from '../components/ProfileSettingsPanel';
 import { 
   Upload, FileText, CheckCircle, Lightbulb, 
   ArrowRight, RefreshCw, Briefcase, History, Compass, Award, ExternalLink,
-  Trash2, AlertTriangle, HelpCircle
+  Trash2, AlertTriangle, HelpCircle, Settings
 } from 'lucide-react';
 import { 
   ResponsiveContainer, RadarChart, PolarGrid, 
@@ -273,6 +274,16 @@ export default function StudentDashboard({ tab = 'resumes' }) {
           }`}
         >
           <History className="w-4 h-4" /> Analysis History
+        </button>
+        <button
+          onClick={() => setActiveSubTab('settings')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            activeSubTab === 'settings'
+              ? 'bg-indigo-600 text-white shadow-md'
+              : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900'
+          }`}
+        >
+          <Settings className="w-4 h-4" /> Settings
         </button>
       </div>
 
@@ -754,6 +765,11 @@ export default function StudentDashboard({ tab = 'resumes' }) {
             </div>
           )}
         </div>
+      )}
+
+      {/* RENDER VIEW: SETTINGS */}
+      {activeSubTab === 'settings' && (
+        <ProfileSettingsPanel />
       )}
     </div>
   );

@@ -102,11 +102,10 @@ function fallbackAnalysis(resumeText, jobDescription) {
   const lines = resumeText.split('\n');
   const bulletLines = lines.map(l => l.trim()).filter(l => l.length > 20 && /^[•\-*]\s/.test(l));
   const improvements = [];
-  const genericImprovements = [
-    { original: "Worked on the backend system using Node.js and MongoDB.", improved: "Engineered and optimized backend REST APIs using Node.js and MongoDB, reducing server response times by 35%.", reason: "Replaced weak verb 'worked on' with 'engineered and optimized' and added quantifiable impact metrics." },
-    { original: "Helped team with front-end React development.", improved: "Spearheaded the integration of React state management using Redux, improving modular code reusability across 4 departments.", reason: "Replaced weak verb 'helped' with action-oriented 'spearheaded' and specified domain of impact." },
-    { original: "Responsible for testing and fixing bugs.", improved: "Implemented automated Jest unit testing, raising test coverage from 45% to 88% and preventing critical production regressions.", reason: "Avoided passive phrase 'responsible for' and detailed automated testing impact." }
-  ];
+  const contextSkills = skills.length > 0 ? skills.slice(0, 3).join(', ') : 'software development';
+  const contextMissing = missingKeywords.length > 0 ? missingKeywords[0] : '';
+
+  const actionVerbs = ['Engineered', 'Spearheaded', 'Architected', 'Optimized', 'Designed', 'Implemented', 'Orchestrated', 'Delivered', 'Accelerated', 'Championed'];
 
   let rewrittenCount = 0;
   for (const bullet of bulletLines) {
@@ -116,16 +115,18 @@ function fallbackAnalysis(resumeText, jobDescription) {
     for (const wv of weakVerbs) {
       if (cleanLower.includes(wv)) {
         const remaining = clean.replace(new RegExp(wv, 'i'), '').trim();
+        const verb = actionVerbs[rewrittenCount % actionVerbs.length];
+        const skillPhrase = contextSkills ? ` using ${contextSkills}` : '';
         let improved, reason;
         if (wv === "helped" || wv === "assisted") {
-          improved = `Collaborated with cross-functional teams to design and implement ${remaining.charAt(0).toLowerCase() + remaining.slice(1)}, enhancing workflow delivery speeds by 15%.`;
-          reason = `Replaced weak verb '${wv}' with collaborative action verb and appended metric framework.`;
+          improved = `${verb} cross-functional delivery of ${remaining.charAt(0).toLowerCase() + remaining.slice(1)}${skillPhrase}, resulting in a 25% efficiency gain and improved team velocity.`;
+          reason = `Replaced weak verb '${wv}' with '${verb.toLowerCase()}' to demonstrate direct ownership and added measurable team impact.`;
         } else if (wv === "worked on" || wv === "handled" || wv === "managed") {
-          improved = `Orchestrated and managed critical technical deployments of ${remaining.charAt(0).toLowerCase() + remaining.slice(1)}, minimizing downtime to under 0.1%.`;
-          reason = `Upgraded action verb '${wv}' to highlight leadership and technical ownership.`;
+          improved = `${verb} end-to-end development of ${remaining.charAt(0).toLowerCase() + remaining.slice(1)}${skillPhrase}, reducing delivery timelines by 30% through automated workflows.`;
+          reason = `Upgraded vague verb '${wv}' to '${verb.toLowerCase()}' to convey leadership and technical depth with quantifiable results.`;
         } else {
-          improved = `Spearheaded and executed development for ${remaining.charAt(0).toLowerCase() + remaining.slice(1)}, delivering project 2 weeks ahead of schedule.`;
-          reason = `Transformed weak responsibility statement '${wv}' to direct project impact statement.`;
+          improved = `${verb} comprehensive ${remaining.charAt(0).toLowerCase() + remaining.slice(1)}${skillPhrase}, exceeding project milestones by 20% ahead of schedule.`;
+          reason = `Transformed passive phrasing '${wv}' into an impact-driven action statement with specific outcomes.`;
         }
         improvements.push({ original: clean, improved, reason });
         rewrittenCount++;
@@ -133,7 +134,18 @@ function fallbackAnalysis(resumeText, jobDescription) {
       }
     }
   }
-  if (improvements.length === 0) improvements.push(...genericImprovements);
+
+  if (improvements.length === 0) {
+    const meaningfulLines = lines.map(l => l.trim()).filter(l => l.length > 30 && !/^[•\-*]\s/.test(l) && !/^[A-Z\s]{3,}:?$/.test(l) && !/^(education|experience|skills|projects|contact|summary)/i.test(l));
+    for (let i = 0; i < Math.min(3, meaningfulLines.length); i++) {
+      const verb = actionVerbs[i % actionVerbs.length];
+      improvements.push({
+        original: meaningfulLines[i],
+        improved: `${verb} strategic initiatives focused on ${contextSkills}, driving measurable improvements in performance and team productivity.`,
+        reason: `Restructured generic experience statement with a powerful action verb and added relevant skill context for greater impact.`
+      });
+    }
+  }
 
   const suggestedProjects = [];
   const suggestedCerts = [];

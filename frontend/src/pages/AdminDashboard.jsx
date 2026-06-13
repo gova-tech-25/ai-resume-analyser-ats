@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useRole } from '../context/RoleContext';
 import axios from 'axios';
 import { useSearchParams } from 'react-router-dom';
+import ProfileSettingsPanel from '../components/ProfileSettingsPanel';
 import { 
   Users, Shield, FileText, Trash2, Edit2, 
-  BarChart2, Server, Check, Activity, AlertTriangle, RefreshCw, PlusCircle
+  BarChart2, Server, Check, Activity, AlertTriangle, RefreshCw, PlusCircle, Settings
 } from 'lucide-react';
 import { 
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, 
@@ -165,6 +166,16 @@ export default function AdminDashboard() {
           }`}
         >
           <Users className="w-4 h-4" /> Manage User Accounts
+        </button>
+        <button
+          onClick={() => setActiveSubTab('settings')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            activeSubTab === 'settings'
+              ? 'bg-indigo-600 text-white shadow-md'
+              : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900'
+          }`}
+        >
+          <Settings className="w-4 h-4" /> Settings
         </button>
       </div>
 
@@ -479,6 +490,11 @@ export default function AdminDashboard() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* RENDER VIEW: SETTINGS */}
+      {activeSubTab === 'settings' && (
+        <ProfileSettingsPanel />
       )}
     </div>
   );

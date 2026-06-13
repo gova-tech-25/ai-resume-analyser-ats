@@ -31,8 +31,11 @@ For scoring:
 - Sections Score: check for contact info, education, experience, skills, projects sections
 
 For improvements:
-- Find 3 bullet points with weak verbs (helped, assisted, responsible for, worked on, handled)
-- Rewrite them with strong action verbs and quantifiable metrics
+- Scan the RESUME TEXT below and identify 3-4 actual bullet points that contain weak phrasing (helped, assisted, responsible for, worked on, handled, participated, was part of, etc.)
+- The "original" field MUST be the EXACT VERBATIM text extracted from the resume — do not modify it
+- Rewrite each with strong action verbs (engineered, spearheaded, optimized, designed, implemented, architected, etc.) and add specific quantifiable metrics/outcomes where possible
+- The "reason" field should explain specifically what was weak about the original and how the rewrite improves it
+- IMPORTANT: If the resume has fewer than 3 weak bullet points, select the most impactful experience entries and rewrite them to be stronger even if they don't contain obvious weak verbs
 
 RESUME TEXT:
 {resume_text}

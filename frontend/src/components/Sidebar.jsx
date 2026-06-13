@@ -1,6 +1,6 @@
 import React from 'react';
 import { useRole } from '../context/RoleContext';
-import { FileText, Briefcase, BarChart2, Shield, Home, History, PlusCircle } from 'lucide-react';
+import { FileText, Briefcase, BarChart2, Shield, Home, History, PlusCircle, Settings } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 export default function Sidebar() {
@@ -92,7 +92,19 @@ export default function Sidebar() {
           </nav>
         </div>
 
-        <div className="flex flex-col gap-4 border-t border-slate-100 pt-4 dark:border-slate-800">
+        <div className="flex flex-col gap-2">
+          <Link
+            to="/dashboard?tab=settings"
+            onClick={() => setMobileMenuOpen(false)}
+            className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${
+              location.pathname === '/dashboard' && currentTab === 'settings'
+                ? 'bg-gradient-to-r from-indigo-500/10 to-indigo-500/0 text-indigo-600 dark:text-indigo-400 border-l-4 border-indigo-500'
+                : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100/50 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-slate-900/50'
+            }`}
+          >
+            <Settings className="w-4 h-4" />
+            Settings
+          </Link>
           <div className="px-4 py-3 bg-indigo-50/50 rounded-2xl dark:bg-indigo-950/20">
             <div className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 capitalize">
               {activeRole} Dashboard

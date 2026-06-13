@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useRole } from '../context/RoleContext';
 import axios from 'axios';
 import { useSearchParams } from 'react-router-dom';
+import ProfileSettingsPanel from '../components/ProfileSettingsPanel';
 import { 
   Briefcase, Users, FileText, CheckCircle, XCircle, 
-  PlusCircle, Filter, ArrowRight, Download, BarChart2, Check, RefreshCw
+  PlusCircle, Filter, ArrowRight, Download, BarChart2, Check, RefreshCw, Settings
 } from 'lucide-react';
 import { 
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, 
@@ -271,6 +272,16 @@ export default function RecruiterDashboard({ tab = 'jobs' }) {
           }`}
         >
           <BarChart2 className="w-4 h-4" /> Job Analytics
+        </button>
+        <button
+          onClick={() => setActiveSubTab('settings')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            activeSubTab === 'settings'
+              ? 'bg-indigo-600 text-white shadow-md'
+              : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900'
+          }`}
+        >
+          <Settings className="w-4 h-4" /> Settings
         </button>
       </div>
 
@@ -725,6 +736,11 @@ export default function RecruiterDashboard({ tab = 'jobs' }) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* RENDER VIEW: SETTINGS */}
+      {activeSubTab === 'settings' && (
+        <ProfileSettingsPanel />
       )}
     </div>
   );
