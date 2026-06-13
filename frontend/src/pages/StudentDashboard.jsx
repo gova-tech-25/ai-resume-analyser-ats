@@ -5,7 +5,7 @@ import { useSearchParams } from 'react-router-dom';
 import { 
   Upload, FileText, CheckCircle, Lightbulb, 
   ArrowRight, RefreshCw, Briefcase, History, Compass, Award, ExternalLink,
-  Trash2
+  Trash2, AlertTriangle, HelpCircle
 } from 'lucide-react';
 import { 
   ResponsiveContainer, RadarChart, PolarGrid, 
@@ -474,6 +474,27 @@ export default function StudentDashboard({ tab = 'resumes' }) {
                   </div>
                 </div>
 
+                {/* Interview Questions */}
+                {latestReport.interviewQuestions && latestReport.interviewQuestions.length > 0 && (
+                  <div className="glass-panel p-6 rounded-3xl flex flex-col gap-3">
+                    <div className="flex items-center gap-2">
+                      <HelpCircle className="w-5 h-5 text-purple-500" />
+                      <h3 className="text-sm font-bold">Practice Interview Questions</h3>
+                    </div>
+                    <p className="text-[10px] text-slate-400 font-medium">Based on your resume and target role</p>
+                    <ul className="flex flex-col gap-2.5 text-xs">
+                      {latestReport.interviewQuestions.map((q, idx) => (
+                        <li key={idx} className="flex gap-2 items-start text-slate-600 dark:text-slate-400 p-3 bg-purple-50/50 dark:bg-purple-950/10 rounded-xl border border-purple-100/50 dark:border-purple-900/20">
+                          <span className="w-5 h-5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold mt-0.5">
+                            {idx + 1}
+                          </span>
+                          <span className="leading-relaxed">{q}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
                 {/* Bullet Optimization Rewriter */}
                 <div className="glass-panel p-6 rounded-3xl flex flex-col gap-4">
                   <h2 className="text-md font-bold">AI Heuristics Bullet Rewriter</h2>
@@ -636,6 +657,27 @@ export default function StudentDashboard({ tab = 'resumes' }) {
                         </div>
                       </div>
                     </div>
+
+                    {/* Interview Questions for Job Match */}
+                    {matchReport.interviewQuestions && matchReport.interviewQuestions.length > 0 && (
+                      <div className="glass-panel p-6 rounded-3xl flex flex-col gap-3">
+                        <div className="flex items-center gap-2">
+                          <HelpCircle className="w-5 h-5 text-purple-500" />
+                          <h3 className="text-sm font-bold">Practice Interview Questions</h3>
+                        </div>
+                        <p className="text-[10px] text-slate-400 font-medium">Tailored to this job posting and your resume</p>
+                        <ul className="flex flex-col gap-2.5 text-xs">
+                          {matchReport.interviewQuestions.map((q, idx) => (
+                            <li key={idx} className="flex gap-2 items-start text-slate-600 dark:text-slate-400 p-3 bg-purple-50/50 dark:bg-purple-950/10 rounded-xl border border-purple-100/50 dark:border-purple-900/20">
+                              <span className="w-5 h-5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 rounded-full flex items-center justify-center shrink-0 text-[10px] font-bold mt-0.5">
+                                {idx + 1}
+                              </span>
+                              <span className="leading-relaxed">{q}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </>
                 ) : (
                   <div className="glass-panel p-6 rounded-3xl text-center text-xs text-slate-400">

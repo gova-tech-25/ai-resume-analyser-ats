@@ -26,7 +26,8 @@ const ATSReportSchema = new mongoose.Schema({
   sectionsScore: Number,
   improvements: [BulletImprovementSchema],
   suggestedProjects: [String],
-  suggestedCertifications: [String]
+  suggestedCertifications: [String],
+  interviewQuestions: [String]
 }, {
   timestamps: { createdAt: true, updatedAt: false }
 });

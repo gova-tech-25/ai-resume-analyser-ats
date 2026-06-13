@@ -147,6 +147,21 @@ function fallbackAnalysis(resumeText, jobDescription) {
   if (suggestedProjects.length === 0) suggestedProjects.push("Full-Stack Collaborative Project Manager Platform with Real-time Updates", "RESTful API Gateway Service with OAuth2 and Rate Limiting Middleware");
   if (suggestedCerts.length === 0) suggestedCerts.push("CompTIA Security+ or Certified ScrumMaster (CSM)", "Google Cloud Associate Cloud Engineer");
 
+  // Generate interview questions based on skills & missing keywords
+  const interviewQuestions = [];
+  if (skillsLower.includes("react") || missingLower.includes("react")) interviewQuestions.push("Explain the Virtual DOM and how React optimizes re-renders.");
+  if (skillsLower.includes("node.js") || missingLower.includes("node.js")) interviewQuestions.push("How does the Node.js event loop work? Describe the order of execution of microtasks and macrotasks.");
+  if (skillsLower.includes("python")) interviewQuestions.push("Describe Python decorators and provide an example use case in web development.");
+  if (missingLower.includes("aws") || skillsLower.includes("aws")) interviewQuestions.push("Explain the differences between S3, EBS, and EFS storage options in AWS.");
+  if (missingLower.includes("docker") || skillsLower.includes("docker")) interviewQuestions.push("What is the difference between a Docker image and a container? How do you optimize Docker image sizes?");
+  if (missingLower.includes("kubernetes")) interviewQuestions.push("Describe Kubernetes architecture: what are Pods, Deployments, and Services?");
+  if (skillsLower.includes("mongodb") || missingLower.includes("mongodb")) interviewQuestions.push("Explain indexing in MongoDB and how you would optimize a slow query.");
+  if (skillsLower.includes("sql") || skillsLower.includes("postgresql") || missingLower.includes("postgresql")) interviewQuestions.push("What is the difference between a LEFT JOIN and an INNER JOIN? Provide an example scenario.");
+  if (skillsLower.includes("typescript")) interviewQuestions.push("What are TypeScript utility types? Explain Pick, Omit, and Partial with examples.");
+  if (skillsLower.includes("machine learning") || skillsLower.includes("deep learning")) interviewQuestions.push("Explain the bias-variance tradeoff in machine learning models.");
+  interviewQuestions.push("Tell me about a challenging technical problem you solved and how you approached it.");
+  interviewQuestions.push("How do you stay current with new technologies and tools in your field?");
+
   return {
     ats_score: atsScore,
     matching_keywords: matchingKeywords,
@@ -156,7 +171,8 @@ function fallbackAnalysis(resumeText, jobDescription) {
     improvements,
     suggested_projects: suggestedProjects,
     suggested_certifications: suggestedCerts,
-    skills_extracted: skills
+    skills_extracted: skills,
+    interview_questions: interviewQuestions
   };
 }
 

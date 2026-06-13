@@ -32,9 +32,10 @@ Analyze the following resume and return a JSON object with this EXACT structure 
       "reason": "<explanation of improvement>"
     }
   ],
-  "suggested_projects": [<array of 2-4 project ideas based on resume skills>],
+  "suggested_projects": [<array of 3-5 specific, resume-tailored project ideas that would strengthen the candidate's portfolio>],
   "suggested_certifications": [<array of 2-4 certification recommendations>],
-  "skills_extracted": [<array of ALL skills/technologies found in resume>]
+  "skills_extracted": [<array of ALL skills/technologies found in resume>],
+  "interview_questions": [<array of 6-8 specific interview questions combining technical questions (based on job requirements) and behavioral questions (based on resume experience). Include both coding/system-design and behavioral/soft-skill questions.>]
 }
 
 For scoring:
@@ -95,7 +96,8 @@ async function tryModel(modelName, resumeText, jobDescription) {
     improvements: Array.isArray(analysis.improvements) ? analysis.improvements : [],
     suggested_projects: Array.isArray(analysis.suggested_projects) ? analysis.suggested_projects : [],
     suggested_certifications: Array.isArray(analysis.suggested_certifications) ? analysis.suggested_certifications : [],
-    skills_extracted: Array.isArray(analysis.skills_extracted) ? analysis.skills_extracted : []
+    skills_extracted: Array.isArray(analysis.skills_extracted) ? analysis.skills_extracted : [],
+    interview_questions: Array.isArray(analysis.interview_questions) ? analysis.interview_questions : []
   };
 }
 

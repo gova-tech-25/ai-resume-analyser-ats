@@ -73,7 +73,8 @@ const uploadResume = async (req, res) => {
       sectionsScore: aiAnalysis.sections_score || 0,
       improvements: aiAnalysis.improvements || [],
       suggestedProjects: aiAnalysis.suggested_projects || [],
-      suggestedCertifications: aiAnalysis.suggested_certifications || []
+      suggestedCertifications: aiAnalysis.suggested_certifications || [],
+      interviewQuestions: aiAnalysis.interview_questions || []
     });
 
     // Create Notification
@@ -176,7 +177,8 @@ const analyzeAgainstJob = async (req, res) => {
       sectionsScore: aiAnalysis.sections_score,
       improvements: aiAnalysis.improvements || [],
       suggestedProjects: aiAnalysis.suggested_projects || [],
-      suggestedCertifications: aiAnalysis.suggested_certifications || []
+      suggestedCertifications: aiAnalysis.suggested_certifications || [],
+      interviewQuestions: aiAnalysis.interview_questions || []
     });
 
     res.json({
