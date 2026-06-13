@@ -15,6 +15,9 @@ const notificationController = require('../controllers/notificationController');
 // Middleware
 const { auth, authorize } = require('../middleware/auth');
 
+// AI Provider
+const { getAvailableProviders } = require('../services/aiClient');
+
 // Configure Multer storage
 const uploadsDir = path.join(__dirname, '../../uploads');
 if (!fs.existsSync(uploadsDir)) {
@@ -181,5 +184,16 @@ router.put(
   auth,
   notificationController.markAsRead
 );
+
+/* =========================================================================
+   AI PROVIDER ROUTES
+   ========================================================================= */
+router.get('/ai/providers', auth, (req, res) => {
+  const providers = getAvailableProviders();
+  res.json({
+    providers,
+    current: process.env.AI_PROVIDER || 'local'
+  });
+});
 
 module.exports = router;

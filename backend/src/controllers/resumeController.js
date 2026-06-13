@@ -44,7 +44,7 @@ const uploadResume = async (req, res) => {
     }
 
     console.log('[INFO] Sending parsed text to AI microservice...');
-    const aiAnalysis = await analyzeResume(text);
+    const aiAnalysis = await analyzeResume(text, null);
     
     // Validate AI response
     if (!aiAnalysis || !aiAnalysis.ats_score) {
@@ -87,7 +87,9 @@ const uploadResume = async (req, res) => {
     res.status(201).json({
       message: 'Resume uploaded and analyzed successfully.',
       resume,
-      report
+      report,
+      providerUsed: aiAnalysis.providerUsed || 'local',
+      providerError: aiAnalysis.providerError || null
     });
   } catch (error) {
     console.error('[ERROR] Upload and analysis error:', error.message);
@@ -177,7 +179,11 @@ const analyzeAgainstJob = async (req, res) => {
       suggestedCertifications: aiAnalysis.suggested_certifications || []
     });
 
-    res.json(report);
+    res.json({
+      ...report.toObject(),
+      providerUsed: aiAnalysis.providerUsed || 'local',
+      providerError: aiAnalysis.providerError || null
+    });
   } catch (error) {
     console.error('Job match analysis error:', error);
     res.status(500).json({ error: 'Failed to analyze resume against job: ' + error.message });

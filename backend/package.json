@@ -10,6 +10,7 @@
     "build": "npm install --prefix ../frontend && npm run build --prefix ../frontend"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "axios": "^1.6.7",
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",

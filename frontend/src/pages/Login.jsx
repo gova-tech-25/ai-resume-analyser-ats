@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, Sparkles, ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react';
 
 export default function Login() {
-  const { login, register, isAuthenticated } = useRole();
+  const { login, register, forgotPassword, isAuthenticated } = useRole();
   const navigate = useNavigate();
 
   useEffect(() => {

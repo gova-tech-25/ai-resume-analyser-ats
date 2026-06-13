@@ -2,7 +2,7 @@
 
 ATSify is a modern, production-grade AI-powered Resume Analyzer & Applicant Tracking System (ATS) matching platform. It enables students to analyze their resumes, recruiters to post jobs and screen applicants sorted by semantic matching compatibility, and administrators to review system metrics.
 
-The platform is designed to run **100% locally and privately**, requiring no external third-party cloud API costs.
+The platform is designed to run **100% locally and privately** using its built-in NLP engine, with optional external AI providers (Gemini, OpenRouter) for enhanced resume analysis when API keys are configured.
 
 ---
 
@@ -68,8 +68,58 @@ ai-resume-analyser/
 - **Frontend**: React (Vite), TailwindCSS v3, HTML5, Vanilla CSS for glassmorphism animations.
 - **Backend REST API**: Node.js, Express, Mongoose / MongoDB (Community Server or Atlas).
 - **AI & NLP Engine**: Python 3.9+, FastAPI, Uvicorn, spaCy (for lightweight keyword matches), Sentence Transformers (for semantic cosine similarity matching).
+- **External AI Providers**: Google Gemini 2.5 Flash, OpenRouter (free model routing to NVIDIA Nemotron, Google Gemma, OpenAI GPT-OSS, etc.)
 - **File Parsing**: Multer (disk upload handling), pdf-parse, and mammoth (DOCX parser).
 - **Containerization**: Docker & Docker Compose.
+
+---
+
+## 🤖 4. AI Provider Fallback System
+
+ATSify features a smart **automatic fallback chain** for resume analysis. If a provider fails (quota exhausted, API down, no credits), the next one is tried automatically — no manual selection needed.
+
+```
+Priority 1:  Google Gemini (gemini-2.5-flash)
+  ↓ on failure
+Priority 2:  OpenRouter Free (tries best free models in order)
+  ↓ on failure
+Priority 3:  Local NLP (FastAPI microservice → JS fallback engine)
+```
+
+### Priority 1 — Gemini
+Uses `gemini-2.5-flash` with automatic fallback to `gemini-3.5-flash`, `gemini-3.1-flash-lite`, etc. if the primary model is unavailable. Requires a `GEMINI_API_KEY` in `.env`.
+
+### Priority 2 — OpenRouter
+When Gemini is unavailable, the system queries OpenRouter's free model router. Models are tried in order of reasoning quality:
+
+| Model | Intelligence Score |
+|---|---|
+| `nvidia/nemotron-3-ultra-550b-a55b:free` | 47.7 |
+| `google/gemma-4-31b-it:free` | 39.2 |
+| `nvidia/nemotron-3-super-120b-a12b:free` | 36.0 |
+| `openai/gpt-oss-120b:free` | 33.3 |
+| *(plus 3 more fallback models)* | |
+
+The first successful model is cached for subsequent requests. Requires an `OPENROUTER_API_KEY` in `.env`.
+
+### Priority 3 — Local NLP (Always Available)
+- **FastAPI microservice** (port 8000) — NLP keyword extraction & sentence-transformers similarity
+- **JS fallback engine** — runs in the backend if the microservice is offline. Uses regex-based skill extraction, section detection, and grammar scoring.
+
+### Architecture Flow
+
+```mermaid
+graph TD
+    A[React Client - Port 3000] --> B[Node/Express Server - Port 5000]
+    B --> C{MongoDB Database}
+    B --> D[FastAPI NLP Service - Port 8000]
+    B --> E[Google Gemini API]
+    B --> F[OpenRouter API]
+    D --> B
+    style E fill:#4285F4,color:white
+    style F fill:#FF6D00,color:white
+    style D fill:#10B981,color:white
+```
 
 ---
 

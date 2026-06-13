@@ -125,8 +125,9 @@ const register = async (req, res) => {
       return res.status(400).json({ error: 'Username, email, password, and role are required.' });
     }
 
-    if (!['student', 'recruiter', 'admin'].includes(role)) {
-      return res.status(400).json({ error: 'Invalid user role selected.' });
+    // Only allow student and recruiter self-registration. Admin accounts must be created by an existing admin.
+    if (!['student', 'recruiter'].includes(role)) {
+      return res.status(400).json({ error: 'Invalid role. Self-registration is only available for student and recruiter accounts.' });
     }
 
     // Email structure validation

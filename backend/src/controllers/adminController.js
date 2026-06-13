@@ -9,7 +9,7 @@ const ATSReport = require('../models/ATSReport');
  */
 const getUsers = async (req, res) => {
   try {
-    const users = await User.find({}).sort({ createdAt: -1 });
+    const users = await User.find({}).select('-password').sort({ createdAt: -1 });
     res.json(users);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch users: ' + error.message });
@@ -92,7 +92,13 @@ const createUser = async (req, res) => {
 
     res.status(201).json({
       message: 'User created successfully.',
-      user
+      user: {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        profileImage: user.profileImage
+      }
     });
   } catch (error) {
     if (error.code === 11000) {
@@ -156,7 +162,13 @@ const updateUser = async (req, res) => {
 
     res.json({
       message: 'User updated successfully.',
-      user
+      user: {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        profileImage: user.profileImage
+      }
     });
   } catch (error) {
     if (error.code === 11000) {

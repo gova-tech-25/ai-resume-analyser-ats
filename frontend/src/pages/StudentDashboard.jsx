@@ -3,7 +3,7 @@ import { useRole } from '../context/RoleContext';
 import axios from 'axios';
 import { useSearchParams } from 'react-router-dom';
 import { 
-  Upload, FileText, CheckCircle, AlertTriangle, Lightbulb, 
+  Upload, FileText, CheckCircle, Lightbulb, 
   ArrowRight, RefreshCw, Briefcase, History, Compass, Award, ExternalLink,
   Trash2
 } from 'lucide-react';
@@ -29,6 +29,7 @@ export default function StudentDashboard({ tab = 'resumes' }) {
   // Latest scan data
   const [latestResume, setLatestResume] = useState(null);
   const [latestReport, setLatestReport] = useState(null);
+  const [providerUsed, setProviderUsed] = useState(null);
   
   // History data
   const [historyList, setHistoryList] = useState([]);
@@ -115,19 +116,41 @@ export default function StudentDashboard({ tab = 'resumes' }) {
     }
   };
 
-  // Handle Drag-and-Drop file select
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+  const ALLOWED_TYPES = ['pdf', 'docx'];
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const ext = file.name.split('.').pop().toLowerCase();
-      if (ext !== 'pdf' && ext !== 'docx') {
-        setUploadError('Only PDF and DOCX file types are allowed.');
-        setSelectedFile(null);
-      } else {
-        setUploadError('');
-        setSelectedFile(file);
-      }
+    if (!file) return;
+
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (!ALLOWED_TYPES.includes(ext)) {
+      setUploadError('Only PDF and DOCX file types are allowed.');
+      setSelectedFile(null);
+      return;
     }
+
+    if (file.size > MAX_FILE_SIZE) {
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+      setUploadError(`File too large (${sizeMB}MB). Maximum allowed size is 5MB.`);
+      setSelectedFile(null);
+      return;
+    }
+
+    if (file.size === 0) {
+      setUploadError('File is empty. Please select a valid resume file.');
+      setSelectedFile(null);
+      return;
+    }
+
+    setUploadError('');
+    setSelectedFile(file);
+  };
+
+  const formatFileSize = (bytes) => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   };
 
   const handleUploadSubmit = async (e) => {
@@ -137,6 +160,7 @@ export default function StudentDashboard({ tab = 'resumes' }) {
     try {
       setUploading(true);
       setUploadError('');
+      setProviderUsed(null);
       
       const formData = new FormData();
       formData.append('resume', selectedFile);
@@ -150,8 +174,9 @@ export default function StudentDashboard({ tab = 'resumes' }) {
 
       setLatestResume(res.data.resume);
       setLatestReport(res.data.report);
+      setProviderUsed(res.data.providerUsed || 'local');
       setSelectedFile(null);
-      fetchHistory(); // refresh history
+      fetchHistory();
     } catch (err) {
       setUploadError(err.response?.data?.error || 'Failed to upload resume.');
     } finally {
@@ -167,6 +192,7 @@ export default function StudentDashboard({ tab = 'resumes' }) {
     try {
       setMatchingLoading(true);
       setMatchingJob(job);
+      setProviderUsed(null);
       const res = await axios.post('/api/resumes/analyze', {
         resumeId: latestResume._id,
         jobId: job._id
@@ -174,6 +200,7 @@ export default function StudentDashboard({ tab = 'resumes' }) {
         headers: getAuthHeaders()
       });
       setMatchReport(res.data);
+      setProviderUsed(res.data.providerUsed || 'local');
     } catch (err) {
       console.error('Match analysis failed:', err);
     } finally {
@@ -256,6 +283,7 @@ export default function StudentDashboard({ tab = 'resumes' }) {
           <div className="flex flex-col gap-6 lg:col-span-1">
             <div className="glass-panel p-6 rounded-3xl flex flex-col gap-4">
               <h2 className="text-md font-bold">Upload New Resume</h2>
+              
               <form onSubmit={handleUploadSubmit} className="flex flex-col gap-4">
                 <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-6 text-center hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors cursor-pointer relative">
                   <input
@@ -270,7 +298,12 @@ export default function StudentDashboard({ tab = 'resumes' }) {
                     <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                       {selectedFile ? selectedFile.name : 'Select or drag PDF/DOCX file'}
                     </span>
-                    <span className="text-[10px] text-slate-400">Max size: 5MB</span>
+                    <span className="text-[10px] text-slate-400">
+                      {selectedFile
+                        ? `${formatFileSize(selectedFile.size)} / 5MB max`
+                        : 'Max size: 5MB'
+                      }
+                    </span>
                   </div>
                 </div>
 
@@ -298,6 +331,23 @@ export default function StudentDashboard({ tab = 'resumes' }) {
                 )}
               </form>
             </div>
+
+            {/* Provider Used Badge */}
+            {providerUsed && (
+              <div className={`px-4 py-2.5 rounded-2xl flex items-center gap-2 text-[11px] font-bold ${
+                providerUsed === 'gemini'
+                  ? 'bg-blue-50 dark:bg-blue-950/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800/40'
+                  : providerUsed === 'openrouter'
+                    ? 'bg-orange-50 dark:bg-orange-950/20 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-800/40'
+                    : 'bg-slate-50 dark:bg-slate-900/40 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800'
+              }`}>
+                <span className="text-sm">{providerUsed === 'gemini' ? '✨' : providerUsed === 'openrouter' ? '🔄' : '🏠'}</span>
+                Analyzed with {providerUsed === 'gemini' ? 'Gemini AI' : providerUsed === 'openrouter' ? 'OpenRouter' : 'Local NLP'}
+                {providerUsed === 'local' && (
+                  <span className="font-normal opacity-60">(fallback)</span>
+                )}
+              </div>
+            )}
 
             {/* Quick Summary metrics */}
             {latestReport && (
@@ -377,7 +427,7 @@ export default function StudentDashboard({ tab = 'resumes' }) {
                 <div className="glass-panel p-6 rounded-3xl flex flex-col gap-4">
                   <h2 className="text-md font-bold">Extracted Keywords & Skills</h2>
                   <div className="flex flex-wrap gap-1.5">
-                    {latestResume?.skills?.length === 0 ? (
+                    {!latestResume?.skills || latestResume.skills.length === 0 ? (
                       <span className="text-xs text-slate-400">No skills parsed automatically.</span>
                     ) : (
                       latestResume.skills.map((s, idx) => (

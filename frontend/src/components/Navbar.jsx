@@ -6,7 +6,6 @@ import ProfileModal from './ProfileModal';
 export default function Navbar() {
   const { 
     activeRole, 
-    switchRole, 
     activeUser, 
     profiles, 
     theme, 
@@ -15,8 +14,7 @@ export default function Navbar() {
     markNotificationRead,
     mobileMenuOpen,
     setMobileMenuOpen,
-    logout,
-    updateProfile
+    logout
   } = useRole();
 
   const [showRoleMenu, setShowRoleMenu] = useState(false);
